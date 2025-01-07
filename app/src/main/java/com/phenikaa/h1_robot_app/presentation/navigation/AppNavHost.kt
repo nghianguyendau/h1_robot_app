@@ -10,6 +10,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.phenikaa.h1_robot_app.presentation.features.home.HomeScreen
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationScreen
 import com.phenikaa.h1_robot_app.presentation.features.phonecall.PhoneCallScreen
+import com.phenikaa.h1_robot_app.presentation.features.robotdoor.RobotDoorScreen
 import com.phenikaa.h1_robot_app.presentation.features.websocket.WebSocketScreen
 import com.phenikaa.h1_robot_app.ui.components.CustomTopAppBar
 
@@ -48,6 +49,9 @@ fun AppNavHost(
                 PhoneCallScreen(
                     navController = navController
                 )
+            }
+            composable(Screen.DoorScreen.route) {
+                RobotDoorScreen()
             }
         }
     }

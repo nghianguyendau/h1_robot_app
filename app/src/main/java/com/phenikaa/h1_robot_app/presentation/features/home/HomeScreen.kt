@@ -97,7 +97,7 @@ fun HomeScreen(
                         heightType = BoxHeightType.HALF,
                         layoutType = BoxLayoutType.HORIZONTAL,
                         onClick = {
-
+                            navController.navigate("door_screen")
                         }
                     )
 

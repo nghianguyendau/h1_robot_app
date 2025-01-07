@@ -12,6 +12,7 @@ import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObserveConnectionState
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObservePhoneCallMessagesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -31,11 +32,19 @@ class PhoneCallViewModel @Inject constructor(
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
 
-    private val _uiState = MutableStateFlow<PhoneCallUiState>(PhoneCallUiState.Calling)
+    private val _uiState = MutableStateFlow<PhoneCallUiState>(PhoneCallUiState.EnterRoomNumber)
     val uiState: StateFlow<PhoneCallUiState> = _uiState
 
+    private val _trayState = MutableStateFlow<DeliveryTrayState>(DeliveryTrayState.Initial)
+    val trayState: StateFlow<DeliveryTrayState> = _trayState
+
+    private val _timeLeft = MutableStateFlow(140)
+    val timeLeft: StateFlow<Int> = _timeLeft
+
     private var observeMessagesJob: Job? = null
+    private var timerJob: Job? = null
     private var roomNumber: String = ""
+    private var phoneNumber: String = ""
 
     init {
         viewModelScope.launch {
@@ -43,12 +52,6 @@ class PhoneCallViewModel @Inject constructor(
                 _connectionState.value = it
             }
         }
-
-//        viewModelScope.launch {
-//            observeMessagesUseCase().collect { message ->
-//                handlePhoneCallMessage(message)
-//            }
-//        }
     }
 
     fun connect(url: String) {
@@ -64,22 +67,49 @@ class PhoneCallViewModel @Inject constructor(
     fun disconnect() {
         disconnectUseCase()
         observeMessagesJob?.cancel()
+        timerJob?.cancel()
     }
 
     fun setRoomNumber(number: String) {
         roomNumber = number
     }
 
+    fun setPhoneNumber(number: String) {
+        phoneNumber = number
+    }
+
     fun getRoomNumber(): String = roomNumber
+    fun getPhoneNumber(): String = phoneNumber
+
+    private fun startTimer() {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (_timeLeft.value > 0) {
+                delay(1000)
+                _timeLeft.value -= 1
+            }
+        }
+    }
 
     fun updateState(state: PhoneCallUiState) {
         _uiState.value = state
+        if (state is PhoneCallUiState.OnCall) {
+            startTimer()
+        }
     }
 
-    fun makePhoneCall(phoneNumber: String) {
+    fun makePhoneCall() {
         Log.d("PhoneCallViewModel", "makePhoneCall: $phoneNumber")
         viewModelScope.launch {
             makePhoneCallUseCase(phoneNumber)
+        }
+    }
+
+    fun openTray() {
+        viewModelScope.launch {
+            _trayState.value = DeliveryTrayState.Opening
+            delay(5000) // Simulate tray opening time
+            _trayState.value = DeliveryTrayState.Opened
         }
     }
 
@@ -89,28 +119,29 @@ class PhoneCallViewModel @Inject constructor(
 
         when (message.status) {
             1, 2 -> {
-                if (_uiState.value == PhoneCallUiState.EnterPhoneNumber) {
-                    _uiState.value = PhoneCallUiState.Calling
-                    Log.d("HandleMessage", "State updated to Calling")
+                if (_uiState.value is PhoneCallUiState.MovingToRoomNumber) {
+                    _uiState.value = PhoneCallUiState.OnCall(CallStatus.Calling)
                 }
             }
             3, 4, 5 -> {
-                if (_uiState.value == PhoneCallUiState.Calling) {
-                    _uiState.value = PhoneCallUiState.CallEnded("Cuộc gọi kết thúc.")
-                    Log.d("HandleMessage", "State updated to CallEnded")
+                if (_uiState.value is PhoneCallUiState.OnCall) {
+                    _uiState.value = PhoneCallUiState.OnCall(CallStatus.Ended("Cuộc gọi kết thúc."))
                 }
             }
             else -> {
                 _uiState.value = PhoneCallUiState.Error
-                Log.d("HandleMessage", "State updated to Error")
             }
         }
     }
 
     fun reset() {
         _uiState.value = PhoneCallUiState.EnterPhoneNumber
+        _trayState.value = DeliveryTrayState.Initial
+        _timeLeft.value = 140
         _phoneCallState.value = null
         roomNumber = ""
+        phoneNumber = ""
+        timerJob?.cancel()
         observeMessagesJob?.cancel()
     }
 

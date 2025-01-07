@@ -23,7 +23,7 @@ import com.phenikaa.h1_robot_app.ui.components.LottieAnimation
 fun MovingToRoomNumberScreen(
     roomNumber: String,
     onArrived: () -> Unit,
-    onCall: () -> Unit
+
 ) {
     var isArrived by remember { mutableStateOf(false) }
 
@@ -33,7 +33,7 @@ fun MovingToRoomNumberScreen(
 
         kotlinx.coroutines.delay(5000)
         onArrived()
-        onCall()
+//        onCall()
     }
 
     Column(

@@ -9,6 +9,7 @@ android {
     namespace = "com.phenikaa.h1_robot_app"
     compileSdk = 35
 
+
     defaultConfig {
         applicationId = "com.phenikaa.h1_robot_app"
         minSdk = 24
@@ -22,6 +23,12 @@ android {
         }
 
         multiDexEnabled = true
+
+        ndk {
+            abiFilters.add("armeabi-v7a")
+            abiFilters.add("arm64-v8a") // Thêm các ABI cụ thể
+        }
+
     }
 
     buildTypes {
@@ -55,8 +62,16 @@ android {
             excludes += "META-INF/*.RSA"
             excludes += "META-INF/io.netty.versions.properties" // Loại trừ file gây lỗi
         }
-    }
 
+        jniLibs {
+           useLegacyPackaging = true
+        }
+    }
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDir("src/main/jniLibs")
+        }
+    }
 }
 
 dependencies {
@@ -86,6 +101,9 @@ dependencies {
 
     //lottie
     implementation ("com.airbnb.android:lottie-compose:4.0.0")
+
+    // coil
+    implementation ("io.coil-kt:coil-compose:2.5.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

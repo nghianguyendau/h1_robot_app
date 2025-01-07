@@ -20,12 +20,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.H1_robot_app"
         tools:replace="android:theme"
+        android:largeHeap="true"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="CSJ_SDK_REMOTE_APP_NAME"
+            android:value="com.phenikaa.h1_robot_app" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.App.NoSystemBars">
+            android:theme="@style/Theme.App.NoSystemBars"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -23,6 +23,8 @@ fun PhoneCallScreen(
 
     val connectionState by viewModel.connectionState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val trayState by viewModel.trayState.collectAsState()
+    val timeLeft by viewModel.timeLeft.collectAsState()
 
     LaunchedEffect(connectionState) {
         if (connectionState == ConnectionState.DISCONNECTED) {
@@ -37,7 +39,7 @@ fun PhoneCallScreen(
         }
     }
 
-    when (uiState) {
+    when (val currentState = uiState) {
         is PhoneCallUiState.EnterRoomNumber -> {
             EnterNumberScreen(
                 connectionState = connectionState,
@@ -71,7 +73,7 @@ fun PhoneCallScreen(
                     phoneNumber = phoneNumber.dropLast(1)
                 },
                 onConfirmClick = {
-                    viewModel.setRoomNumber(roomNumber)
+                    viewModel.setPhoneNumber(phoneNumber)
                     viewModel.updateState(PhoneCallUiState.MovingToRoomNumber(roomNumber))
                 },
                 isConfirmEnabled = phoneNumber.length >= 10
@@ -80,22 +82,23 @@ fun PhoneCallScreen(
 
         is PhoneCallUiState.MovingToRoomNumber -> {
             MovingToRoomNumberScreen(
-                roomNumber = (uiState as PhoneCallUiState.MovingToRoomNumber).roomNumber,
+                roomNumber = currentState.roomNumber,
                 onArrived = {
-                    viewModel.updateState(PhoneCallUiState.Calling)
+                    if(connectionState == ConnectionState.CONNECTED) {
+                        viewModel.updateState(PhoneCallUiState.OnCall(CallStatus.Calling))
+                        viewModel.makePhoneCall()
+                    }
                 },
-                onCall = {
-                    viewModel.makePhoneCall(phoneNumber)
-                }
             )
         }
 
-        is PhoneCallUiState.Calling -> {
-            CallingScreen(phoneNumber)
-        }
-
-        is PhoneCallUiState.CallEnded -> {
-            CallEndedScreen(
+        is PhoneCallUiState.OnCall -> {
+            CallingScreen(
+                callStatus = currentState.status,
+                trayState = trayState,
+                phoneNumber = viewModel.getPhoneNumber(),
+                timeLeft = timeLeft,
+                onOpenTray = { viewModel.openTray() },
                 onConfirm = {
                     viewModel.reset()
                     navController.navigate("home") {
@@ -106,7 +109,14 @@ fun PhoneCallScreen(
         }
 
         is PhoneCallUiState.Error -> {
-            ErrorScreen()
+            ErrorScreen(
+//                onConfirm = {
+//                    viewModel.reset()
+//                    navController.navigate("home") {
+//                        popUpTo("phoneCall") { inclusive = true }
+//                    }
+//                }
+            )
         }
     }
 }

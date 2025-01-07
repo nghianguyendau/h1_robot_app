@@ -5,4 +5,5 @@ sealed class Screen(val route: String) {
     object Navigation : Screen("navigation")
     object WebSocket : Screen("websocket")
     object PhoneCall: Screen("phone_call")
+    object DoorScreen: Screen("door_screen")
 }
