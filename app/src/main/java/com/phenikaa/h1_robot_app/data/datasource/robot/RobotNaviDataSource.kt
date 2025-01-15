@@ -202,8 +202,8 @@ class RobotNaviDataSource @Inject constructor(
         })
     }
 
-    fun cancelNavigation() {
-        robotAction.cancelNavi(null)
+    fun cancelNavigation(listener: OnNaviListener?) {
+        robotAction.cancelNavi(listener)
     }
 
     fun moveDirection(direction: Int) {

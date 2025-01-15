@@ -48,7 +48,7 @@ class NavigationRepositoryImpl @Inject constructor(
     }
 
     override suspend fun cancelNavigation() {
-        naviDataSource.cancelNavigation()
+        naviDataSource.cancelNavigation(null)
     }
 
     override suspend fun moveDirection(direction: Int) {

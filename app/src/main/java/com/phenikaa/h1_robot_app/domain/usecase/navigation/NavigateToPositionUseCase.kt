@@ -13,4 +13,10 @@ class NavigateToPositionUseCase @Inject constructor(
 
 //    suspend fun navigateToPosition(position: RosPosition) = navigationRepository.navigateToPosition(position)
 
+    suspend fun cancelNavi() = navigationRepository.cancelNavigation()
+
+    suspend fun setSpeed(speed: Float) = navigationRepository.setSpeed(speed)
+
+    suspend fun getSpeed() = navigationRepository.getSpeed()
+
 }

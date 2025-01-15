@@ -20,6 +20,8 @@ fun NavigationScreen(
     val currentPosition by viewModel.currentPosition.collectAsState()
     val navigationResult by viewModel.navigationResult.collectAsState()
 
+    val currentSpeed by viewModel.currentSpeed.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.getCurrentPosition()
     }
@@ -40,7 +42,7 @@ fun NavigationScreen(
             Text(
                 text = "X: ${position.x}, Y: ${position.y}, Rotation: ${position.rotation}°"
             )
-        }
+        } ?: Text("Fetching current position...")
 
         // Navigation State Display
         when (navigationState) {
@@ -144,29 +146,23 @@ fun NavigationScreen(
                 )
             }
 
-            Row {
-                DirectionButton(
-                    text = "Navigate to (1.0, 2.0, 0.0)",
-                    onClick = {
-                        val position = RosPosition(
-                            poseName = "Docking Station",
-                            pos = RosPosition.PosBean(
-                                x = 1.0f,
-                                y = 2.0f,
-                                z = 0.0f,
-                                rotation = 90.0f
-                            )
-                        )
-                        viewModel.navigateToPosition(position)
-                    }
-                )
-                DirectionButton(
-                    text = "Go home",
-                    onClick = {
-                        viewModel.goHome()
-                    }
-                )
-            }
+//            Row {
+//                DirectionButton(
+//                    text = "Navigate to (1.0, 2.0, 0.0)",
+//                    onClick = {
+//                        val position = RosPosition(
+//                            poseName = "Docking Station",
+//                            pos = RosPosition.PosBean(
+//                                x = 1.0f,
+//                                y = 2.0f,
+//                                z = 0.0f,
+//                                rotation = 90.0f
+//                            )
+//                        )
+//                        viewModel.navigateToPosition(position)
+//                    }
+//                )
+//            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -180,12 +176,52 @@ fun NavigationScreen(
                     text = "Go",
                     onClick = {  viewModel.navigateToSavedPosition()  }
                 )
+
+                DirectionButton(
+                    text = "Go home",
+                    onClick = {
+                        viewModel.goHome()
+                    }
+                )
+                DirectionButton(
+                    text = "Cancel navi",
+                    onClick = {
+                        viewModel.cancelNavi()
+                    }
+                )
                 // Hiển thị kết quả điều hướng
                 when (navigationResult) {
                     true -> Text("Navigation completed successfully!")
                     false -> Text("Navigation failed.")
                     null -> Text("Ready to navigate.")
                 }
+            }
+
+            Row {
+                // Hiển thị tốc độ hiện tại
+                Text(
+                    text = currentSpeed?.let { "Current Speed: $it m/s" } ?: "Speed not available",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                DirectionButton(
+                    text = "Get current speed",
+                    onClick = {
+                        viewModel.fetchCurrentSpeed()
+                    }
+                )
+                DirectionButton(
+                    text = "Set speed 0.8 m/s",
+                    onClick = {
+                        viewModel.setSpeed(0.8f)
+                    }
+                )
+                DirectionButton(
+                    text = "Set speed 0.2 m/s",
+                    onClick = {
+                        viewModel.setSpeed(0.2f)
+                    }
+                )
+
             }
         }
     }

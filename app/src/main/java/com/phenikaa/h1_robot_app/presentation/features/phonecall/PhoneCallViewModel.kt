@@ -32,7 +32,7 @@ class PhoneCallViewModel @Inject constructor(
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
 
-    private val _uiState = MutableStateFlow<PhoneCallUiState>(PhoneCallUiState.EnterRoomNumber)
+    private val _uiState = MutableStateFlow<PhoneCallUiState>(PhoneCallUiState.OnCall(CallStatus.Calling))
     val uiState: StateFlow<PhoneCallUiState> = _uiState
 
     private val _trayState = MutableStateFlow<DeliveryTrayState>(DeliveryTrayState.Initial)

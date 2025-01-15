@@ -35,19 +35,24 @@ class NavigationViewModel @Inject constructor(
     private val _currentPosition = MutableStateFlow<Position?>(null)
     val currentPosition: StateFlow<Position?> = _currentPosition
 
+    private val _currentSpeed = MutableStateFlow<Float?>(null)
+    val currentSpeed: StateFlow<Float?> get() = _currentSpeed
+
     fun getCurrentPosition() {
         Log.d("NavigationViewModel", "getCurrentPosition called")
         viewModelScope.launch {
-            try {
-                val position = getCurrentPositionUseCase()
-                _currentPosition.value = position
-
-                Log.d("NavigationViewModel", "Current position: $position")
-            } catch (e: Exception) {
-                Log.d("NavigationViewModel", "Error getting current position: $e")
+            while (true) {
+                try {
+                    val position = getCurrentPositionUseCase()
+                    _currentPosition.value = position
+                } catch (e: Exception) {
+                    Log.e("NavigationViewModel", "Error fetching position: ${e.message}")
+                }
+                delay(1000)
             }
         }
     }
+
 
     fun navigateToPosition(position: RosPosition) {
         viewModelScope.launch {
@@ -133,6 +138,30 @@ class NavigationViewModel @Inject constructor(
             val result = navigateToPositionUseCase(position)
             _navigationResult.value = result
 //            navigateToPositionUseCase.navigateToPosition(position)
+        }
+    }
+
+    fun cancelNavi(){
+        viewModelScope.launch {
+            navigateToPositionUseCase.cancelNavi()
+        }
+    }
+
+    fun setSpeed(speed: Float){
+        viewModelScope.launch {
+            navigateToPositionUseCase.setSpeed(speed)
+        }
+    }
+
+    fun fetchCurrentSpeed() {
+        viewModelScope.launch {
+            try {
+                val speed = navigateToPositionUseCase.getSpeed()
+                _currentSpeed.value = speed
+                Log.d("NavigationViewModel", "Current speed: $speed")
+            } catch (e: Exception) {
+                Log.e("NavigationViewModel", "Error fetching speed: ${e.message}")
+            }
         }
     }
 }
