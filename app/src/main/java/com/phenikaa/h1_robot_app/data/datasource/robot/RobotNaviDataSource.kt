@@ -4,11 +4,15 @@ import android.util.Log
 import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.core.State
 import com.csjbot.coshandler.listener.OnGoRotationListener
+import com.csjbot.coshandler.listener.OnMapListListener
+import com.csjbot.coshandler.listener.OnMapListener
 import com.csjbot.coshandler.listener.OnNaviListener
 import com.csjbot.coshandler.listener.OnPositionListener
 import com.csjbot.coshandler.listener.OnSpeedGetListener
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.model.RosPosition
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -237,4 +241,59 @@ class RobotNaviDataSource @Inject constructor(
 //                continuation.resume(isReachable)
 //            }
 //        }
+
+    // Tải bản đồ mặc định
+    fun loadMap() {
+        robotAction.loadMap()
+    }
+
+    // Tải bản đồ theo tên
+    fun loadMap(name: String) {
+        robotAction.loadMap(name)
+    }
+
+    // Tải bản đồ với listener
+    fun loadMap(name: String, listener: OnMapListener) {
+        robotAction.loadMap(name, listener)
+    }
+
+    // Tải bản đồ và đặt robot tại tọa độ cụ thể
+    fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener?) {
+        robotAction.loadMap(name, x, y, rotation, listener)
+    }
+
+    // Lấy danh sách bản đồ từ SDK
+    suspend fun getMapList(): List<String> = suspendCoroutine { continuation ->
+        robotAction.getMapList(object : OnMapListListener {
+            override fun response(mapListJson: String) {
+                try {
+                    // Phân tích JSON gốc
+                    val jsonObject = JSONObject(mapListJson)
+
+                    // Kiểm tra mã lỗi
+                    if (jsonObject.getInt("error_code") != 0) {
+                        continuation.resumeWithException(Exception("Error fetching map list"))
+                        return
+                    }
+
+                    // Lấy danh sách bản đồ từ trường "maplist"
+                    val mapListArray = jsonObject.getJSONArray("maplist")
+                    val mapList = mutableListOf<String>()
+                    for (i in 0 until mapListArray.length()) {
+                        val mapObject = mapListArray.getJSONObject(i)
+                        val mapName = mapObject.getString("name")
+                        mapList.add(mapName)
+                    }
+
+                    // Trả kết quả danh sách bản đồ
+                    continuation.resume(mapList)
+                } catch (e: Exception) {
+                    continuation.resumeWithException(e)
+                }
+            }
+        })
+    }
+
+
+
 }

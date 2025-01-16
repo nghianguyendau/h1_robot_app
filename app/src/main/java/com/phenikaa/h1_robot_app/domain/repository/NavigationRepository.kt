@@ -1,5 +1,7 @@
 package com.phenikaa.h1_robot_app.domain.repository
 
+import com.csjbot.coshandler.listener.OnMapListListener
+import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.Position
 import com.phenikaa.h1_robot_app.domain.model.NavigationState
@@ -20,10 +22,17 @@ interface NavigationRepository {
     suspend fun setSpeed(speed: Float)
     suspend fun getSpeed(): Float
     suspend fun saveMap(name: String): Result<Unit>
-    suspend fun loadMap(name: String): Result<Unit>
-    suspend fun getMapList(): Flow<MapState>
+//    suspend fun loadMap(name: String): Result<Unit>
+    suspend fun getMapList(): List<String>
 //    suspend fun goHome(): Flow<NavigationState>
 
     suspend fun goHome(): Boolean
 //    suspend fun checkDestinationReachable(position: Position): Boolean
+
+    suspend fun loadMap()
+    suspend fun loadMap(name: String)
+    suspend fun loadMap(name: String, listener: OnMapListener)
+    suspend fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener?)
+
+
 }

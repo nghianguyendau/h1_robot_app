@@ -1,6 +1,8 @@
 package com.phenikaa.h1_robot_app.data.repository
 
 import android.util.Log
+import com.csjbot.coshandler.listener.OnMapListListener
+import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.MapState
@@ -82,12 +84,12 @@ class NavigationRepositoryImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    override suspend fun loadMap(name: String): Result<Unit> {
-        TODO("Not yet implemented")
-    }
+//    override suspend fun loadMap(name: String): Result<Unit> {
+//        TODO("Not yet implemented")
+//    }
 
-    override suspend fun getMapList(): Flow<MapState> {
-        TODO("Not yet implemented")
+    override suspend fun getMapList(): List<String> {
+        return naviDataSource.getMapList()
     }
 
 //    override suspend fun goHome(): Flow<NavigationState> = flow {
@@ -113,4 +115,26 @@ class NavigationRepositoryImpl @Inject constructor(
 //        val rosPosition = RosPosition.fromDomainModel(position)
 //        return naviDataSource.isDestinationReachable(rosPosition)
 //    }
+
+    override suspend fun loadMap() {
+       naviDataSource.loadMap()
+    }
+
+    override suspend fun loadMap(name: String) {
+        naviDataSource.loadMap(name)
+    }
+
+    override suspend fun loadMap(name: String, listener: OnMapListener) {
+        naviDataSource.loadMap(name, listener)
+    }
+
+    override suspend fun loadMap(
+        name: String,
+        x: Float,
+        y: Float,
+        rotation: Float,
+        listener: OnMapListener?
+    ) {
+        naviDataSource.loadMap(name, x, y, rotation, listener)
+    }
 }

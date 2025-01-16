@@ -1,6 +1,10 @@
 package com.phenikaa.h1_robot_app
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
@@ -55,11 +59,9 @@ class MyApplication : MultiDexApplication() {
 
     private suspend fun setupRobotModules() {
         CsjRobot.enableSlam(true)
-//        CsjRobot.setIpAndrPort("127.0.0.1", 60002)
-//        CsjRobot.setIpAndrPort("192.168.99.2", 1445)
-//        CsjRobot.setRobotType(CsjRobot.RobotType.SCUD)
-        CsjRobot.getInstance().init(this)
 
+        CsjRobot.getInstance().init(this)
+        checkAndRequestOverlayPermission(this)
 //        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
 //            override fun getBattery(battery: Int) {
 //                Log.d("TAG", "Battery level: $battery%")
@@ -185,6 +187,15 @@ class MyApplication : MultiDexApplication() {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         MultiDex.install(this)
+    }
+
+    fun checkAndRequestOverlayPermission(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(context)) {
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+                context.startActivity(intent)
+            }
+        }
     }
 }
 

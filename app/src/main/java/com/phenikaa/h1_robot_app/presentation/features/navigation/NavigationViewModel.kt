@@ -3,11 +3,13 @@ package com.phenikaa.h1_robot_app.presentation.features.navigation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.csjbot.coshandler.listener.OnMapListListener
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.Position
 import com.phenikaa.h1_robot_app.domain.model.NavigationState
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.GetCurrentPositionUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.navigation.MapUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +26,8 @@ class NavigationViewModel @Inject constructor(
     private val getCurrentPositionUseCase: GetCurrentPositionUseCase,
     private val navigateToPositionUseCase: NavigateToPositionUseCase,
     private val moveDirection: MoveDirectionUseCase,
-    private val naviDataSource: RobotNaviDataSource
+    private val naviDataSource: RobotNaviDataSource,
+    private val mapUseCase: MapUseCase
 
 ) : ViewModel() {
     private var movementJob: Job? = null
@@ -38,6 +41,15 @@ class NavigationViewModel @Inject constructor(
     private val _currentSpeed = MutableStateFlow<Float?>(null)
     val currentSpeed: StateFlow<Float?> get() = _currentSpeed
 
+    private val _mapList = MutableStateFlow<List<String>>(emptyList())
+    val mapList: StateFlow<List<String>> get() = _mapList
+
+    private val _mapListError = MutableStateFlow<String?>(null)
+    val mapListError: StateFlow<String?> get() = _mapListError
+
+    private val _selectedMap = MutableStateFlow<String?>(null)
+    val selectedMap: StateFlow<String?> get() = _selectedMap
+
     fun getCurrentPosition() {
         Log.d("NavigationViewModel", "getCurrentPosition called")
         viewModelScope.launch {
@@ -50,6 +62,12 @@ class NavigationViewModel @Inject constructor(
                 }
                 delay(1000)
             }
+//            try {
+//                    val position = getCurrentPositionUseCase()
+//                    _currentPosition.value = position
+//                } catch (e: Exception) {
+//                    Log.e("NavigationViewModel", "Error fetching position: ${e.message}")
+//                }
         }
     }
 
@@ -161,6 +179,61 @@ class NavigationViewModel @Inject constructor(
                 Log.d("NavigationViewModel", "Current speed: $speed")
             } catch (e: Exception) {
                 Log.e("NavigationViewModel", "Error fetching speed: ${e.message}")
+            }
+        }
+    }
+
+    //Map
+    fun loadDefaultMap(){
+        viewModelScope.launch {
+            mapUseCase.loadDefaultMap()
+            Log.d("NavigationViewModel", "Default map loaded")
+        }
+    }
+
+    fun loadMapByName(name: String){
+        viewModelScope.launch {
+            mapUseCase.loadMapByName(name)
+            Log.d("NavigationViewModel", "Map loaded: $name")
+        }
+    }
+
+    fun loadMapToPosition(name: String, x: Float, y: Float, rotation: Float){
+        viewModelScope.launch {
+            mapUseCase.loadMapToPosition(name, x, y, rotation, null)
+            Log.d("NavigationViewModel", "Map loaded: $name at ($x, $y, $rotation)")
+        }
+    }
+
+    fun fetchMapList() {
+        viewModelScope.launch {
+            try {
+                val maps = mapUseCase()
+                _mapList.value = maps
+            } catch (e: Exception) {
+                _mapListError.value = e.message
+            }
+        }
+    }
+
+    fun selectMap(mapName: String) {
+        _selectedMap.value = mapName
+        Log.d("NavigationViewModel", "Selected map: $mapName")
+    }
+
+    fun loadSelectedMap() {
+        val mapName = _selectedMap.value
+        if (mapName.isNullOrEmpty()) {
+            Log.e("NavigationViewModel", "No map selected to load")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                mapUseCase.loadMapByName(mapName)
+                Log.d("NavigationViewModel", "Map loaded: $mapName")
+            } catch (e: Exception) {
+                Log.e("NavigationViewModel", "Error loading map: ${e.message}")
             }
         }
     }

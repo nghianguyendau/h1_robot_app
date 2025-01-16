@@ -1,7 +1,10 @@
 package com.phenikaa.h1_robot_app.presentation.features.navigation
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +24,10 @@ fun NavigationScreen(
     val navigationResult by viewModel.navigationResult.collectAsState()
 
     val currentSpeed by viewModel.currentSpeed.collectAsState()
+
+    val mapList by viewModel.mapList.collectAsState()
+    val mapListError by viewModel.mapListError.collectAsState()
+    val selectedMap by viewModel.selectedMap.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentPosition()
@@ -45,183 +52,269 @@ fun NavigationScreen(
         } ?: Text("Fetching current position...")
 
         // Navigation State Display
-        when (navigationState) {
-            is NavigationState.Navigating -> {
-                CircularProgressIndicator()
-                Text("Navigating...")
-            }
-            is NavigationState.Completed -> {
-                Text("Navigation completed successfully")
-            }
-            is NavigationState.Error -> {
-                Text(
-                    text = (navigationState as NavigationState.Error).message,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            is NavigationState.Idle -> {
-                Text("Ready to navigate")
-            }
+//        when (navigationState) {
+//            is NavigationState.Navigating -> {
+//                CircularProgressIndicator()
+//                Text("Navigating...")
+//            }
+//            is NavigationState.Completed -> {
+//                Text("Navigation completed successfully")
+//            }
+//            is NavigationState.Error -> {
+//                Text(
+//                    text = (navigationState as NavigationState.Error).message,
+//                    color = MaterialTheme.colorScheme.error
+//                )
+//            }
+//            is NavigationState.Idle -> {
+//                Text("Ready to navigate")
+//            }
+//        }
+        when (navigationResult) {
+            true -> Text("Navigation completed successfully!")
+            false -> Text("Navigation failed.")
+            null -> Text("Ready to navigate.")
         }
 
         // Navigation Controls
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DirectionButton(
-                    text = "Turn Left",
-                    onClick = {
-                        viewModel.moveDirection(2)
-                    }
-                )
-                DirectionButton(
-                    text = "Turn Right",
-                    onClick = {
-                        viewModel.moveDirection(3)
-                    }
-                )
-                DirectionButton(
-                    text = "Forward",
-                    onClick = {
-                        viewModel.moveDirection(0)
-                    }
-                )
-                DirectionButton(
-                    text = "Backward",
-                    onClick = {
-                        viewModel.moveDirection(1)
-                    }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DirectionButton(
-                    text = "Move Forward",
-                    onClick = { viewModel.moveBySerial(0x01) }
-                )
-                DirectionButton(
-                    text = "Turn Left",
-                    onClick = { viewModel.moveBySerial(0x03) }
-                )
-                DirectionButton(
-                    text = "Turn Right",
-                    onClick = { viewModel.moveBySerial(0x04) }
-                )
-                DirectionButton(
-                    text = "Move Forward",
-                    onClick = { viewModel.moveBySerial(0x02) }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DirectionButton(
-                    text = "Rotate 60",
-                    onClick = { viewModel.goAngle(60) }
-                )
-                DirectionButton(
-                    text = "Rotate 120",
-                    onClick = { viewModel.goAngle(120) }
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DirectionButton(
-                    text = "Rotate 90°",
-                    onClick = { viewModel.moveAngle(90) } // Quay 90 độ
-                )
-                DirectionButton(
-                    text = "Rotate 270°",
-                    onClick = { viewModel.moveAngle(270) } // Quay 270 độ
-                )
-            }
-
-//            Row {
-//                DirectionButton(
-//                    text = "Navigate to (1.0, 2.0, 0.0)",
-//                    onClick = {
-//                        val position = RosPosition(
-//                            poseName = "Docking Station",
-//                            pos = RosPosition.PosBean(
-//                                x = 1.0f,
-//                                y = 2.0f,
-//                                z = 0.0f,
-//                                rotation = 90.0f
-//                            )
-//                        )
-//                        viewModel.navigateToPosition(position)
-//                    }
-//                )
-//            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                DirectionButton(
-                    text = "Save Position",
-                    onClick = { viewModel.saveCurrentPosition() }
-                )
-                DirectionButton(
-                    text = "Go",
-                    onClick = {  viewModel.navigateToSavedPosition()  }
-                )
-
-                DirectionButton(
-                    text = "Go home",
-                    onClick = {
-                        viewModel.goHome()
-                    }
-                )
-                DirectionButton(
-                    text = "Cancel navi",
-                    onClick = {
-                        viewModel.cancelNavi()
-                    }
-                )
-                // Hiển thị kết quả điều hướng
-                when (navigationResult) {
-                    true -> Text("Navigation completed successfully!")
-                    false -> Text("Navigation failed.")
-                    null -> Text("Ready to navigate.")
+        Row {
+            Column {
+                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DirectionButton(
+                        text = "Turn Left",
+                        onClick = {
+                            viewModel.moveDirection(2)
+                        }
+                    )
+                    DirectionButton(
+                        text = "Turn Right",
+                        onClick = {
+                            viewModel.moveDirection(3)
+                        }
+                    )
+                    DirectionButton(
+                        text = "Forward",
+                        onClick = {
+                            viewModel.moveDirection(0)
+                        }
+                    )
+                    DirectionButton(
+                        text = "Backward",
+                        onClick = {
+                            viewModel.moveDirection(1)
+                        }
+                    )
                 }
+
+                //            Row(
+                //                modifier = Modifier.fillMaxWidth(),
+                //                horizontalArrangement = Arrangement.SpaceEvenly
+                //            ) {
+                //                DirectionButton(
+                //                    text = "Move Forward",
+                //                    onClick = { viewModel.moveBySerial(0x01) }
+                //                )
+                //                DirectionButton(
+                //                    text = "Turn Left",
+                //                    onClick = { viewModel.moveBySerial(0x03) }
+                //                )
+                //                DirectionButton(
+                //                    text = "Turn Right",
+                //                    onClick = { viewModel.moveBySerial(0x04) }
+                //                )
+                //                DirectionButton(
+                //                    text = "Move Forward",
+                //                    onClick = { viewModel.moveBySerial(0x02) }
+                //                )
+                //            }
+
+                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DirectionButton(
+                        text = "Rotate 60",
+                        onClick = { viewModel.goAngle(60) }
+                    )
+                    DirectionButton(
+                        text = "Rotate 120",
+                        onClick = { viewModel.goAngle(120) }
+                    )
+                    DirectionButton(
+                        text = "Rotate 90 (moveAngle)",
+                        onClick = { viewModel.moveAngle(90) } // Quay 90 độ
+                    )
+                    DirectionButton(
+                        text = "Rotate 270 (moveAngle)",
+                        onClick = { viewModel.moveAngle(270) } // Quay 270 độ
+                    )
+                }
+
+                //            Row(
+                //                modifier = Modifier.fillMaxWidth(),
+                //                horizontalArrangement = Arrangement.SpaceEvenly
+                //            ) {
+                //                DirectionButton(
+                //                    text = "Rotate 90°",
+                //                    onClick = { viewModel.moveAngle(90) } // Quay 90 độ
+                //                )
+                //                DirectionButton(
+                //                    text = "Rotate 270°",
+                //                    onClick = { viewModel.moveAngle(270) } // Quay 270 độ
+                //                )
+                //            }
+
+                //            Row {
+                //                DirectionButton(
+                //                    text = "Navigate to (1.0, 2.0, 0.0)",
+                //                    onClick = {
+                //                        val position = RosPosition(
+                //                            poseName = "Docking Station",
+                //                            pos = RosPosition.PosBean(
+                //                                x = 1.0f,
+                //                                y = 2.0f,
+                //                                z = 0.0f,
+                //                                rotation = 90.0f
+                //                            )
+                //                        )
+                //                        viewModel.navigateToPosition(position)
+                //                    }
+                //                )
+                //            }
+
+                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DirectionButton(
+                        text = "Save Position",
+                        onClick = { viewModel.saveCurrentPosition() }
+                    )
+                    DirectionButton(
+                        text = "Go",
+                        onClick = { viewModel.navigateToSavedPosition() }
+                    )
+
+                    DirectionButton(
+                        text = "Go home",
+                        onClick = {
+                            viewModel.goHome()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Cancel navi",
+                        onClick = {
+                            viewModel.cancelNavi()
+                        }
+                    )
+                }
+
+                Row {
+                    // Hiển thị tốc độ hiện tại
+//                    Text(
+//                        text = currentSpeed?.let { "Current Speed: $it m/s" } ?: "Speed not available",
+//                        style = MaterialTheme.typography.titleMedium
+//                    )
+//                    DirectionButton(
+//                        text = "Get current speed",
+//                        onClick = {
+//                            viewModel.fetchCurrentSpeed()
+//                        }
+//                    )
+                    DirectionButton(
+                        text = "Set speed 0.8 m/s",
+                        onClick = {
+                            viewModel.setSpeed(0.8f)
+                        }
+                    )
+                    DirectionButton(
+                        text = "Set speed 0.2 m/s",
+                        onClick = {
+                            viewModel.setSpeed(0.2f)
+                        }
+                    )
+                }
+
+                //            Row {
+                //                Text("Map Controls", style = MaterialTheme.typography.titleMedium)
+                //
+                //                // Nút tải bản đồ mặc định
+                //                Button(onClick = { viewModel.loadDefaultMap() }) {
+                //                    Text("Load Default Map")
+                //                }
+                //
+                //                // Nút tải bản đồ theo tên
+                //                Button(onClick = { viewModel.loadMapByName("map1") }) {
+                //                    Text("Load Map map1")
+                //                }
+                //
+                ////                // Nút tải bản đồ với tọa độ cụ thể
+                ////                Button(onClick = {
+                ////                    viewModel.loadMapToPosition("12A", 1.0f, 2.0f, 90.0f)
+                ////                }) {
+                ////                    Text("Load Map to Position")
+                ////                }
+                //                // Nút tải bản đồ theo tên
+                //                Button(onClick = { viewModel.loadMapByName("map2") }) {
+                //                    Text("Load Map map2")
+                //                }
+                //                // Nút tải bản đồ theo tên
+                //                Button(onClick = { viewModel.loadMapByName("12A") }) {
+                //                    Text("Load Map 12A")
+                //                }
+                //            }
+
+
+
+
             }
+            Column {
+                Text("Map List", style = MaterialTheme.typography.titleMedium)
 
-            Row {
-                // Hiển thị tốc độ hiện tại
-                Text(
-                    text = currentSpeed?.let { "Current Speed: $it m/s" } ?: "Speed not available",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                DirectionButton(
-                    text = "Get current speed",
-                    onClick = {
-                        viewModel.fetchCurrentSpeed()
-                    }
-                )
-                DirectionButton(
-                    text = "Set speed 0.8 m/s",
-                    onClick = {
-                        viewModel.setSpeed(0.8f)
-                    }
-                )
-                DirectionButton(
-                    text = "Set speed 0.2 m/s",
-                    onClick = {
-                        viewModel.setSpeed(0.2f)
-                    }
-                )
+                // Nút lấy danh sách bản đồ
+                Button(onClick = { viewModel.fetchMapList() }) {
+                    Text("Fetch Map List")
+                }
 
+                // Hiển thị lỗi nếu có
+                mapListError?.let {
+                    Text(
+                        text = "Error: $it",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                // Hiển thị danh sách bản đồ
+                LazyColumn {
+                    items(mapList) { mapName ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .clickable { viewModel.selectMap(mapName) },
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = mapName)
+                            if (mapName == selectedMap) {
+                                Text(
+                                    text = "Selected",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Nút Load Map
+                if (!selectedMap.isNullOrEmpty()) {
+                    Button(onClick = { viewModel.loadSelectedMap() }) {
+                        Text("Load Map: $selectedMap")
+                    }
+                }
             }
         }
     }
