@@ -267,16 +267,13 @@ class RobotNaviDataSource @Inject constructor(
         robotAction.getMapList(object : OnMapListListener {
             override fun response(mapListJson: String) {
                 try {
-                    // Phân tích JSON gốc
                     val jsonObject = JSONObject(mapListJson)
 
-                    // Kiểm tra mã lỗi
                     if (jsonObject.getInt("error_code") != 0) {
                         continuation.resumeWithException(Exception("Error fetching map list"))
                         return
                     }
 
-                    // Lấy danh sách bản đồ từ trường "maplist"
                     val mapListArray = jsonObject.getJSONArray("maplist")
                     val mapList = mutableListOf<String>()
                     for (i in 0 until mapListArray.length()) {
@@ -285,7 +282,6 @@ class RobotNaviDataSource @Inject constructor(
                         mapList.add(mapName)
                     }
 
-                    // Trả kết quả danh sách bản đồ
                     continuation.resume(mapList)
                 } catch (e: Exception) {
                     continuation.resumeWithException(e)

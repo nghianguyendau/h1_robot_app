@@ -78,6 +78,8 @@ class NavigationViewModel @Inject constructor(
 //                _navigationState.value = state
 //            }
 //            navigateToPositionUseCase.navigateToPosition(position)
+            val result = navigateToPositionUseCase(position)
+            _navigationResult.value = result
         }
     }
 

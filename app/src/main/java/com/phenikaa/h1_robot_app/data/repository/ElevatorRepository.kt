@@ -1,0 +1,52 @@
+package com.phenikaa.h1_robot_app.data.repository
+
+import com.google.gson.Gson
+import com.phenikaa.h1_robot_app.data.api.ApiClient
+import com.phenikaa.h1_robot_app.data.api.ApiService
+import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.data.model.ElevatorData
+import com.phenikaa.h1_robot_app.data.model.ElevatorRequest
+import com.phenikaa.h1_robot_app.data.model.ElevatorResponse
+import com.phenikaa.h1_robot_app.domain.model.ElevatorMessage
+import com.phenikaa.h1_robot_app.domain.model.ElevatorResponseMessage
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class ElevatorRepository @Inject constructor(
+    private val baseWebSocketDataSource: BaseWebSocketDataSource,
+    private val gson: Gson,
+) {
+
+    suspend fun callElevator(currentFloor: Int, destinationFloor: Int): ElevatorResponse {
+        // Tạo instance ElevatorRequest
+        val request = ElevatorRequest(
+            current_floor = currentFloor,
+            destination_floor = destinationFloor
+        )
+        val response =ApiClient.apiService.callElevator(request, "RobotSN01")
+
+        return ApiClient.apiService.callElevator(request, "RobotSN01")
+    }
+    fun connect() {
+        baseWebSocketDataSource.connect("wss://robotic-elevator-api.phx.asia?type=ROBOT&serial_number=RobotSN01")
+    }
+
+    fun disconnect() {
+        baseWebSocketDataSource.disconnect()
+    }
+
+    fun sendMessage(message: String) {
+        baseWebSocketDataSource.sendMessage(message)
+    }
+
+    fun receiveMessages(): Flow<String> {
+        return baseWebSocketDataSource.receiveMessages()
+    }
+
+    fun getConnectionState(): StateFlow<ConnectionState> {
+        return baseWebSocketDataSource.connectionState
+    }
+}

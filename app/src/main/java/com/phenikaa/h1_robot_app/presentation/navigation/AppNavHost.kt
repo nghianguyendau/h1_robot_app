@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.phenikaa.h1_robot_app.presentation.features.elevator.RobotElevatorScreen
 import com.phenikaa.h1_robot_app.presentation.features.home.HomeScreen
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationScreen
 import com.phenikaa.h1_robot_app.presentation.features.phonecall.PhoneCallScreen
@@ -52,6 +53,9 @@ fun AppNavHost(
             }
             composable(Screen.DoorScreen.route) {
                 RobotDoorScreen()
+            }
+            composable(Screen.ElevatorScreen.route) {
+                RobotElevatorScreen()
             }
         }
     }
