@@ -36,7 +36,7 @@ data class RosPosition(
         y = pos.y,
         z = pos.z,
         rotation = pos.rotation,
-        poseName = poseName
+//        poseName = poseName
     )
 
     companion object {

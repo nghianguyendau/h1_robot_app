@@ -1,5 +1,6 @@
 package com.phenikaa.h1_robot_app.data.repository
 
+import android.util.Log
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.api.ApiClient
 import com.phenikaa.h1_robot_app.data.api.ApiService
@@ -26,7 +27,7 @@ class ElevatorRepository @Inject constructor(
             current_floor = currentFloor,
             destination_floor = destinationFloor
         )
-        val response =ApiClient.apiService.callElevator(request, "RobotSN01")
+//        val response =ApiClient.apiService.callElevator(request, "RobotSN01")
 
         return ApiClient.apiService.callElevator(request, "RobotSN01")
     }
@@ -39,7 +40,12 @@ class ElevatorRepository @Inject constructor(
     }
 
     fun sendMessage(message: String) {
-        baseWebSocketDataSource.sendMessage(message)
+        if(baseWebSocketDataSource.connectionState.value == ConnectionState.CONNECTED) {
+            baseWebSocketDataSource.sendMessage(message)
+        }
+        else {
+            Log.e("Websocket", "DISCONNECTED")
+        }
     }
 
     fun receiveMessages(): Flow<String> {

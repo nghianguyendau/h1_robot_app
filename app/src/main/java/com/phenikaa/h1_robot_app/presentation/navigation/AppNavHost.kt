@@ -18,7 +18,7 @@ import com.phenikaa.h1_robot_app.ui.components.CustomTopAppBar
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Theo dõi route hiện tại
     val currentRoute = navController

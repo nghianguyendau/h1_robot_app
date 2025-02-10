@@ -62,19 +62,30 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     // Điều hướng đến một vị trí
-    suspend fun navigateToPosition(position: RosPosition): Boolean = suspendCoroutine { continuation ->
+    suspend fun navigateToPosition(position: String): Boolean = suspendCoroutine { continuation ->
         // Biến cờ để kiểm soát việc gọi resume
         var isResumed = false
-
+        Log.e("000000", "1111111")
         try {
             val jsonObject = JSONObject()
-            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
-            jsonObject.put("x", position.pos.x)
-            jsonObject.put("y", position.pos.y)
-            jsonObject.put("z", position.pos.z)
-            jsonObject.put("rotation", position.pos.rotation)
+//            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
+//            jsonObject.put("x", 16.090723)
+//            jsonObject.put("y", -7.5906825)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", 92.71033)
+
+            jsonObject.put("x", 2.6824255)
+            jsonObject.put("y", -0.2290653)
+            jsonObject.put("z",0.0)
+            jsonObject.put("rotation", -0.2657993)
+            Log.e("111111", "22222222")
 
             val json = jsonObject.toString()
+
+            Log.e("22222", "333333")
+
+            Log.d("Json", json);
+            json::class.simpleName?.let { Log.d("Type", it) }
 
             robotAction.navi(json, object : OnNaviListener {
                 override fun moveResult(result: String) {
@@ -83,8 +94,10 @@ class RobotNaviDataSource @Inject constructor(
                         isResumed = true
                         if (result.contains("\"error_code\":0")) {
                             continuation.resume(true) // Thành công
+                            Log.d("dsdsdsdsds", "Thanh cong")
                         } else {
                             continuation.resume(false) // Thất bại
+                            Log.d("dsdsdsdsds", "that baiiiiiii")
                         }
                     }
                 }
@@ -107,6 +120,7 @@ class RobotNaviDataSource @Inject constructor(
             })
         } catch (e: Exception) {
             // Đảm bảo chỉ gọi resumeWithException một lần
+            Log.e("********", "======")
             if (!isResumed) {
                 isResumed = true
                 continuation.resumeWithException(e)
@@ -114,7 +128,165 @@ class RobotNaviDataSource @Inject constructor(
         }
     }
 
+    suspend fun navigateToPosition2(position: String): Boolean = suspendCoroutine { continuation ->
+        // Biến cờ để kiểm soát việc gọi resume
+        var isResumed = false
+        Log.e("000000", "1111111")
+        try {
+            val jsonObject = JSONObject()
+//            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
+//            jsonObject.put("x", 15.971256)
+//            jsonObject.put("y", -4.607306)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", -87.812195)
+//
+//            //Diem tang 1
+//            jsonObject.put("x", -13.873219)
+//            jsonObject.put("y", 2.7112331)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", 87.985886)
 
+
+            //Diem test map 12A-2
+//            jsonObject.put("x", -6.2440734)
+//            jsonObject.put("y", -14.355196)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", 119.73541)
+
+            jsonObject.put("x", -0.21469636)
+            jsonObject.put("y", 0.006519)
+            jsonObject.put("z",0.0)
+            jsonObject.put("rotation", -0.19207564)
+
+            Log.e("111111", "22222222")
+
+            val json = jsonObject.toString()
+
+            Log.e("22222", "333333")
+
+            Log.d("Json", json);
+            json::class.simpleName?.let { Log.d("Type", it) }
+
+            robotAction.navi(json, object : OnNaviListener {
+                override fun moveResult(result: String) {
+                    // Đảm bảo chỉ gọi resume một lần
+                    if (!isResumed) {
+                        isResumed = true
+                        if (result.contains("\"error_code\":0")) {
+                            continuation.resume(true) // Thành công
+                            Log.d("dsdsdsdsds", "Thanh cong")
+                        } else {
+                            continuation.resume(false) // Thất bại
+                            Log.d("dsdsdsdsds", "that baiiiiiii")
+                        }
+                    }
+                }
+
+                override fun messageSendResult(result: String) {
+                    Log.d("RobotNaviDataSource", "Message sent result: $result")
+                }
+
+                override fun cancelResult(result: String) {
+                    // Đảm bảo chỉ gọi resume một lần
+                    if (!isResumed) {
+                        isResumed = true
+                        continuation.resume(false) // Điều hướng bị hủy
+                    }
+                }
+
+                override fun goHome() {
+                    // Không cần xử lý trong trường hợp này
+                }
+            })
+        } catch (e: Exception) {
+            // Đảm bảo chỉ gọi resumeWithException một lần
+            Log.e("********", "======")
+            if (!isResumed) {
+                isResumed = true
+                continuation.resumeWithException(e)
+            }
+        }
+    }
+
+    suspend fun navigateToDestination(position: String): Boolean = suspendCoroutine { continuation ->
+        // Biến cờ để kiểm soát việc gọi resume
+        var isResumed = false
+        Log.e("000000", "1111111")
+        try {
+            val jsonObject = JSONObject()
+////            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
+////            // Điểm ngoài thang máy tầng 1
+////            jsonObject.put("x", -13.873219)
+////            jsonObject.put("y", 2.7112331)
+////            jsonObject.put("z",0.0)
+////            jsonObject.put("rotation", 87.985886)
+//
+//
+////            // Điểm fake tầng 12A
+////            jsonObject.put("x", 1.007645)
+////            jsonObject.put("y", 0.9554419)
+////            jsonObject.put("z",0.0)
+////            jsonObject.put("rotation", 36.04042)
+            // Điểm fake tầng 12A-2
+            jsonObject.put("x", -6.4490547)
+            jsonObject.put("y", -14.451439)
+            jsonObject.put("z",0.0)
+            jsonObject.put("rotation", 126.795456)
+
+            jsonObject.put("x", 2.6824255)
+            jsonObject.put("y", -0.2290653)
+            jsonObject.put("z",0.0)
+            jsonObject.put("rotation", -0.2657993)
+
+            Log.e("111111", "22222222")
+
+            val json = jsonObject.toString()
+
+            Log.e("22222", "333333")
+
+            Log.d("Json", json);
+            json::class.simpleName?.let { Log.d("Type", it) }
+
+            robotAction.navi(position, object : OnNaviListener {
+                override fun moveResult(result: String) {
+                    // Đảm bảo chỉ gọi resume một lần
+                    if (!isResumed) {
+                        isResumed = true
+                        if (result.contains("\"error_code\":0")) {
+                            continuation.resume(true) // Thành công
+                            Log.d("dsdsdsdsds", "Thanh cong")
+                        } else {
+                            continuation.resume(false) // Thất bại
+                            Log.d("dsdsdsdsds", "that baiiiiiii")
+                        }
+                    }
+                }
+
+                override fun messageSendResult(result: String) {
+                    Log.d("RobotNaviDataSource", "Message sent result: $result")
+                }
+
+                override fun cancelResult(result: String) {
+                    // Đảm bảo chỉ gọi resume một lần
+                    if (!isResumed) {
+                        isResumed = true
+                        continuation.resume(false) // Điều hướng bị hủy
+                    }
+                }
+
+                override fun goHome() {
+                    // Không cần xử lý trong trường hợp này
+                }
+            })
+        } catch (e: Exception) {
+            // Đảm bảo chỉ gọi resumeWithException một lần
+            Log.e("********", "======")
+            if (!isResumed) {
+                isResumed = true
+                continuation.resumeWithException(e)
+            }
+        }
+    }
 
     suspend fun goAngle(angle: Int){
         robotAction.goAngle(angle)
@@ -258,9 +430,14 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     // Tải bản đồ và đặt robot tại tọa độ cụ thể
-    fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener?) {
+    fun loadMap(name: String, x: Float, y: Float, rotation: Float) {
+        robotAction.loadMap(name, x, y, rotation)
+    }
+    fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener) {
         robotAction.loadMap(name, x, y, rotation, listener)
     }
+
+
 
     // Lấy danh sách bản đồ từ SDK
     suspend fun getMapList(): List<String> = suspendCoroutine { continuation ->

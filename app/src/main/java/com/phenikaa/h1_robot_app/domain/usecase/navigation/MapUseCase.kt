@@ -20,8 +20,12 @@ class MapUseCase @Inject constructor(
         navigationRepository.loadMap(name, listener)
     }
 
-    suspend fun loadMapToPosition(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener?) {
-        navigationRepository.loadMap(name, x, y, rotation, listener)
+    suspend fun loadMapToPosition(name: String, x: Float, y: Float, rotation: Float) {
+        navigationRepository.loadMap(name, x, y, rotation)
+    }
+
+    suspend fun loadMapToPositionWithListener(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener) {
+        navigationRepository.loadMapWithListener(name, x, y, rotation, listener)
     }
 
     suspend operator fun invoke(): List<String> {

@@ -45,8 +45,15 @@ class NavigationRepositoryImpl @Inject constructor(
 //        }
 //    }
 
-    override suspend fun navigateToPosition(position: RosPosition): Boolean {
+    override suspend fun navigateToPosition(position: String): Boolean {
         return naviDataSource.navigateToPosition(position)
+    }
+
+    override suspend fun navigateToPosition2(position: String): Boolean {
+        return naviDataSource.navigateToPosition2(position)
+    }
+    override suspend fun navigateToDestination(position: String): Boolean {
+        return naviDataSource.navigateToDestination(position)
     }
 
     override suspend fun cancelNavigation() {
@@ -133,8 +140,19 @@ class NavigationRepositoryImpl @Inject constructor(
         x: Float,
         y: Float,
         rotation: Float,
-        listener: OnMapListener?
+//        listener: OnMapListener?
+    ) {
+        naviDataSource.loadMap(name, x, y, rotation)
+    }
+
+    override suspend fun loadMapWithListener(
+        name: String,
+        x: Float,
+        y: Float,
+        rotation: Float,
+        listener: OnMapListener
     ) {
         naviDataSource.loadMap(name, x, y, rotation, listener)
     }
+
 }

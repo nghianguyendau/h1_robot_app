@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.NavigationState
 import com.phenikaa.h1_robot_app.domain.model.Position
@@ -28,6 +29,27 @@ fun NavigationScreen(
     val mapList by viewModel.mapList.collectAsState()
     val mapListError by viewModel.mapListError.collectAsState()
     val selectedMap by viewModel.selectedMap.collectAsState()
+
+    val position = """{"x": -6.4490547, "y": -14.451439, "z": 0.0, "rotation": 126.7954562}"""
+
+
+    val mapListener = remember {
+        object : OnMapListener {
+            override fun saveMap(status: Int) {
+                // Xử lý khi lưu map
+                Log.d("MapListener", "Save map status: $status")
+            }
+
+            override fun loadMap(status: Int) {
+                // Xử lý khi load map
+                when (status) {
+                    0 -> Log.d("MapListener", "Map loading started")
+                    100 -> Log.d("MapListener", "Map loaded successfully")
+                    else -> Log.d("MapListener", "Loading progress: $status")
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentPosition()
@@ -199,6 +221,18 @@ fun NavigationScreen(
                     )
 
                     DirectionButton(
+                        text = "Go 2",
+                        onClick = { viewModel.navigateToSavedPosition2() }
+                    )
+                    DirectionButton(
+                        text = "Go Des",
+                        onClick = { viewModel.navigateToDestination(position)
+
+                        Log.e("ddddddddddddddddd", "ddddddddddddddd")
+                        }
+                    )
+
+                    DirectionButton(
                         text = "Go home",
                         onClick = {
                             viewModel.goHome()
@@ -231,9 +265,9 @@ fun NavigationScreen(
                         }
                     )
                     DirectionButton(
-                        text = "Set speed 0.2 m/s",
+                        text = "Set speed 0.4 m/s",
                         onClick = {
-                            viewModel.setSpeed(0.2f)
+                            viewModel.setSpeed(0.4f)
                         }
                     )
                 }

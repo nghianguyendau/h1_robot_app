@@ -1,15 +1,13 @@
 package com.phenikaa.h1_robot_app.domain.usecase.navigation
 
-import com.phenikaa.h1_robot_app.data.model.RosPosition
-import com.phenikaa.h1_robot_app.domain.model.Position
 import com.phenikaa.h1_robot_app.domain.repository.NavigationRepository
 import javax.inject.Inject
 
-class NavigateToPositionUseCase @Inject constructor(
+class NavigateToPosition2UseCase @Inject constructor(
     private val navigationRepository: NavigationRepository
 ) {
     suspend operator fun invoke(position: String) =
-        navigationRepository.navigateToPosition(position)
+        navigationRepository.navigateToPosition2(position)
 
 //    suspend fun navigateToPosition(position: RosPosition) = navigationRepository.navigateToPosition(position)
 

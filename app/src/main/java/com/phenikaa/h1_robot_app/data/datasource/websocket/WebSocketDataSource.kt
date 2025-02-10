@@ -15,7 +15,8 @@ class BaseWebSocketDataSource @Inject constructor(
     private val client: OkHttpClient
 ) {
     private var webSocket: WebSocket? = null
-    private val messageChannel = Channel<String>()
+//    private val messageChannel = Channel<String>()
+    private val messageChannel = Channel<String>(capacity = Channel.BUFFERED)
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
 
@@ -24,24 +25,32 @@ class BaseWebSocketDataSource @Inject constructor(
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 _connectionState.value = ConnectionState.CONNECTED
+                Log.d("WebSocket", "WebSocket connected")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                if (!messageChannel.trySend(text).isSuccess) {
-                    Log.e("WebSocket", "Failed to send message to channel")
+                Log.d("WebSocket", "Message received: $text")
+                if (!messageChannel.isClosedForSend) {
+                    if (!messageChannel.trySend(text).isSuccess) {
+                        Log.e("WebSocket", "Failed to send message to channel: $text")
+                    }
+                } else {
+                    Log.e("WebSocket", "Channel is closed, cannot send message")
                 }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 _connectionState.value = ConnectionState.DISCONNECTED
-                t.printStackTrace()
+                Log.e("WebSocket", "WebSocket connection failed: ${t.message}")
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 _connectionState.value = ConnectionState.DISCONNECTED
+                Log.d("WebSocket", "WebSocket closed: $reason")
             }
         })
     }
+
 
     fun disconnect() {
         webSocket?.close(1000, "Disconnected")

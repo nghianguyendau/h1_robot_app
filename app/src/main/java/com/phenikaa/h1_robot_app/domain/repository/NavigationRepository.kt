@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface NavigationRepository {
     suspend fun getCurrentPosition(): Position
-    suspend fun navigateToPosition(position: RosPosition): Boolean
+    suspend fun navigateToPosition(position: String): Boolean
+    suspend fun navigateToPosition2(position: String): Boolean
+    suspend fun navigateToDestination(position: String): Boolean
     suspend fun cancelNavigation()
     suspend fun moveDirection(direction: Int)
     suspend fun moveBySerial(direction: Int)
@@ -32,7 +34,8 @@ interface NavigationRepository {
     suspend fun loadMap()
     suspend fun loadMap(name: String)
     suspend fun loadMap(name: String, listener: OnMapListener)
-    suspend fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener?)
+    suspend fun loadMap(name: String, x: Float, y: Float, rotation: Float)
+    suspend fun loadMapWithListener(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener)
 
 
 }
