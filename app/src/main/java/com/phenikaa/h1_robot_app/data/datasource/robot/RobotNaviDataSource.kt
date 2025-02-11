@@ -228,15 +228,15 @@ class RobotNaviDataSource @Inject constructor(
 ////            jsonObject.put("z",0.0)
 ////            jsonObject.put("rotation", 36.04042)
             // Điểm fake tầng 12A-2
-            jsonObject.put("x", -6.4490547)
-            jsonObject.put("y", -14.451439)
-            jsonObject.put("z",0.0)
-            jsonObject.put("rotation", 126.795456)
-
-            jsonObject.put("x", 2.6824255)
-            jsonObject.put("y", -0.2290653)
-            jsonObject.put("z",0.0)
-            jsonObject.put("rotation", -0.2657993)
+//            jsonObject.put("x", -6.4490547)
+//            jsonObject.put("y", -14.451439)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", 126.795456)
+//
+//            jsonObject.put("x", 2.6824255)
+//            jsonObject.put("y", -0.2290653)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", -0.2657993)
 
             Log.e("111111", "22222222")
 

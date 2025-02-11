@@ -68,21 +68,9 @@ class ElevatorGoHomeViewModel @Inject constructor(
     }
 
     val positionDes = """{"x": -6.4490547, "y": -14.451439, "z": 0.0, "rotation": 126.7954562}"""
+    val positionOutSide = """{"x": 2.6824255, "y": -0.2290653, "z": 0.0, "rotation": -0.2657993}"""
+    val positionInSide = """{"x": -0.21469636, "y": 0.006519, "z": 0.0, "rotation": -0.19207564}"""
 
-    // Định nghĩa các điểm định vị
-//    companion object {
-//        // Tầng 13
-//        private const val FLOOR_13_ELEVATOR_POINT =
-//            "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
-//        private const val FLOOR_13_CABIN_POINT =
-//            "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
-//
-//        // Tầng 1
-//        private const val FLOOR_1_ELEVATOR_POINT =
-//            "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
-//        private const val FLOOR_1_CABIN_POINT =
-//            "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
-//    }
 
     init {
         connectWebSocket()
@@ -137,7 +125,8 @@ class ElevatorGoHomeViewModel @Inject constructor(
                 Log.d("Elevator", "Up Journey Response: $response")
 
                 _robotState.value = RobotState.WAITING_FOR_ELEVATOR
-                navigateToReturnElevatorPoint()
+//                navigateToReturnElevatorPoint()
+                navigateToElevatorPoint()
             } catch (e: Exception) {
                 Log.e("Elevator", "Error calling elevator for up journey: ${e.message}")
             }
@@ -181,16 +170,17 @@ class ElevatorGoHomeViewModel @Inject constructor(
                             delay(5000)
                             when (_currentJourney.value) {
                                 JourneyDirection.DOWN_13_TO_1 -> {
-//                                    loadMapByName("1-2")
+                                    loadMapByName("1-2")
                                     Log.e("iiiiii", "Down 1")
                                     navigateToExitCabin()
                                 }
 
                                 JourneyDirection.UP_1_TO_13 -> {
-//                                    loadMapByName("12A-2")
+                                    loadMapByName("12A-2")
                                     Log.e("iiiiii", "Up 13")
 
-                                    navigateToReturnExitCabin()
+//                                    navigateToReturnExitCabin()
+                                    navigateToExitCabin()
 //                                    navigateToDestination(positionDes)
 
                                 }
@@ -281,7 +271,7 @@ class ElevatorGoHomeViewModel @Inject constructor(
                     navigateToPositionUseCase.setSpeed(0.2f)
                     when (_currentJourney.value) {
                         JourneyDirection.DOWN_13_TO_1 -> navigateToCabin()
-                        JourneyDirection.UP_1_TO_13 -> navigateToReturnCabin()
+                        JourneyDirection.UP_1_TO_13 -> navigateToCabin()
                         JourneyDirection.NONE -> Log.e(
                             "Navigation",
                             "No journey direction specified"
@@ -295,12 +285,13 @@ class ElevatorGoHomeViewModel @Inject constructor(
 
     // Di chuyển đến điểm chờ thang máy tầng 13
     private fun navigateToElevatorPoint() {
-        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
+//        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
 
         viewModelScope.launch {
             try {
                 _isElevatorPointReached.value = false
-                val result = navigateToPositionUseCase(position)
+//                val result = navigateToPositionUseCase(position)
+                val result = navigateToDestinationUseCase(positionOutSide)
                 _navigationResult.value = result
 
                 if (result == true) {
@@ -314,35 +305,37 @@ class ElevatorGoHomeViewModel @Inject constructor(
     }
 
     // Di chuyển đến điểm chờ thang máy tầng 1
-    private fun navigateToReturnElevatorPoint() {
-        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
-
-        viewModelScope.launch {
-            try {
-                _isElevatorPointReached.value = false
-                val result = navigateToPositionUseCase(position)
-                _navigationResult.value = result
-
-                if (result == true) {
-                    _isElevatorPointReached.value = true
-                    Log.d("NavigationViewModel", "Reached floor 1 elevator point")
-                }
-            } catch (e: Exception) {
-                Log.e(
-                    "NavigationViewModel",
-                    "Error navigating to floor 1 elevator point: ${e.message}"
-                )
-            }
-        }
-    }
+//    private fun navigateToReturnElevatorPoint() {
+////        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
+//
+//        viewModelScope.launch {
+//            try {
+//                _isElevatorPointReached.value = false
+////                val result = navigateToPositionUseCase(position)
+//                val result = navigateToDestinationUseCase(positionOutSide)
+//                _navigationResult.value = result
+//
+//                if (result == true) {
+//                    _isElevatorPointReached.value = true
+//                    Log.d("NavigationViewModel", "Reached floor 1 elevator point")
+//                }
+//            } catch (e: Exception) {
+//                Log.e(
+//                    "NavigationViewModel",
+//                    "Error navigating to floor 1 elevator point: ${e.message}"
+//                )
+//            }
+//        }
+//    }
 
     // Di chuyển vào cabin từ tầng 13
     private fun navigateToCabin() {
-        val position = "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
+//        val position = "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
 
         viewModelScope.launch {
             try {
-                val result = navigateToPosition2UseCase(position)
+//                val result = navigateToPosition2UseCase(position)
+                val result = navigateToDestinationUseCase(positionInSide)
                 _navigationResult.value = result
 
                 if (result == true) {
@@ -352,7 +345,7 @@ class ElevatorGoHomeViewModel @Inject constructor(
                         Log.e("iiiiii", _taskId.value.toString())
                         sendRobotInCabinMessage(currentTaskId)
                         _robotState.value = RobotState.INSIDE_CABIN
-                        loadMapByName("1-2")
+//                        loadMapByName("1-2")
                     }
                 }
             } catch (e: Exception) {
@@ -366,7 +359,8 @@ class ElevatorGoHomeViewModel @Inject constructor(
         val position = "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
         viewModelScope.launch {
             try {
-                val result = navigateToPosition2UseCase(position)
+//                val result = navigateToPosition2UseCase(position)
+                val result = navigateToDestinationUseCase(positionInSide)
                 _navigationResult.value = result
 
                 if (result == true) {
@@ -376,7 +370,7 @@ class ElevatorGoHomeViewModel @Inject constructor(
                         Log.e("iiiiii", _taskId.value.toString())
                         sendRobotInCabinMessage(currentTaskId)
                         _robotState.value = RobotState.INSIDE_CABIN
-                        loadMapByName("12A-2")
+//                        loadMapByName("12A-2")
                     }
                 }
             } catch (e: Exception) {
@@ -391,7 +385,8 @@ class ElevatorGoHomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val result = navigateToPositionUseCase(position)
+//                val result = navigateToPositionUseCase(position)
+                val result = navigateToDestinationUseCase(positionOutSide)
                 _navigationResult.value = result
 
                 if (result == true) {
@@ -400,6 +395,10 @@ class ElevatorGoHomeViewModel @Inject constructor(
                         sendRobotExitCabinMessage(currentTaskId)
                         _robotState.value = RobotState.IDLE
                         navigateToPositionUseCase.setSpeed(0.8f)
+                        if (_currentJourney.value == JourneyDirection.UP_1_TO_13) {
+                            goHome()
+                            Log.d("NavigationViewModel", "Robot is going home after exiting cabin at floor 13")
+                        }
 //                        elevatorRepository.disconnect()
 //                        _taskId.value = null
                     }
@@ -416,7 +415,8 @@ class ElevatorGoHomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val result = navigateToPositionUseCase(position)
+//                val result = navigateToPositionUseCase(position)
+                val result = navigateToDestinationUseCase(positionOutSide)
                 _navigationResult.value = result
 
                 if (result == true) {
@@ -435,28 +435,6 @@ class ElevatorGoHomeViewModel @Inject constructor(
                     "NavigationViewModel",
                     "Error navigating to exit cabin on floor 13: ${e.message}"
                 )
-            }
-        }
-    }
-
-    fun navigateToDestination(position: String) {
-        viewModelScope.launch {
-            try {
-                val result = navigateToDestinationUseCase(position)
-                _navigationResult.value = result
-                Log.d("NavigationViewModel", "Navigation to destination result: $result")
-
-                if (result == true) {
-                    val currentTaskId = _taskId.value
-                    if (currentTaskId != null) {
-                        sendRobotExitCabinMessage(currentTaskId)
-                        _robotState.value = RobotState.IDLE
-//                        elevatorRepository.disconnect()
-//                        _taskId.value = null
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("NavigationViewModel", "Error navigating to destination: ${e.message}")
             }
         }
     }

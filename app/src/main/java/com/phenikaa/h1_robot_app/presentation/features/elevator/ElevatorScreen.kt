@@ -20,18 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun RobotElevatorScreen(
-    robotElevatorViewModel: RobotElevatorViewModel = hiltViewModel(),
-    robotElevatorGoHomeViewModel: ElevatorGoHomeViewModel = hiltViewModel(),
+    robotElevatorViewModel: ElevatorViewModel = hiltViewModel(),
     navigationViewModel: NavigationViewModel = hiltViewModel()
 ) {
-//    val robotState by robotElevatorViewModel.robotState.collectAsState()
-    val robotState by robotElevatorGoHomeViewModel.robotState.collectAsState()
+    val robotState by robotElevatorViewModel.robotState.collectAsState()
     val messages by robotElevatorViewModel.messages.collectAsState()
     val currentPosition by navigationViewModel.currentPosition.collectAsState()
 
@@ -41,7 +38,7 @@ fun RobotElevatorScreen(
 
     // Truyền NavigationViewModel trực tiếp vào RobotElevatorViewModel
     LaunchedEffect(Unit) {
-        robotElevatorGoHomeViewModel.navigationViewModel = navigationViewModel
+        robotElevatorViewModel.navigationViewModel = navigationViewModel
         navigationViewModel.getCurrentPosition()
     }
 
@@ -88,25 +85,25 @@ fun RobotElevatorScreen(
 //            Button(onClick = { robotElevatorViewModel.callElevator(13, 1) }) {
 //                Text("Call Elevator 12A-1")
 //            }
-            Button(onClick = { robotElevatorGoHomeViewModel.callElevatorDown() }) {
+            Button(onClick = { robotElevatorViewModel.callElevatorDown() }) {
                 Text("Call Elevator 12A-1")
             }
-            Button(onClick = { robotElevatorGoHomeViewModel.callElevatorUp() }) {
+            Button(onClick = { robotElevatorViewModel.callElevatorUp() }) {
                 Text("Call Elevator 1-12A")
             }
-            Button(onClick = { robotElevatorGoHomeViewModel.cancelAllTasks() }) {
+            Button(onClick = { robotElevatorViewModel.cancelAllTasks() }) {
                 Text("Cancel task")
             }
 
 //            Button(onClick = { robotElevatorViewModel.sendRobotConfirmation("event_1234") }) {
 //                Text("Send Confirmation")
 //            }
-            Button(onClick = { robotElevatorViewModel.saveCurrentPosition1()}) {
-                Text("Save Position 1")
-            }
-            Button(onClick = { robotElevatorViewModel.saveCurrentPosition2()}) {
-                Text("Save Position 2")
-            }
+//            Button(onClick = { robotElevatorViewModel.saveCurrentPosition1()}) {
+//                Text("Save Position 1")
+//            }
+//            Button(onClick = { robotElevatorViewModel.saveCurrentPosition2()}) {
+//                Text("Save Position 2")
+//            }
 //            Button(onClick = { robotElevatorViewModel.navigateToCabin()}) {
 //                Text("Go to saveP2")
 //            }
