@@ -51,19 +51,21 @@ import kotlinx.coroutines.launch
 @Composable
 fun RobotElevatorScreen(
     robotElevatorViewModel: ElevatorViewModel = hiltViewModel(),
-    elevatorGoHomeViewModel: ElevatorGoHomeViewModel = hiltViewModel(),
     navigationViewModel: NavigationViewModel = hiltViewModel()
 ) {
-    val points by elevatorGoHomeViewModel.points.collectAsState()
+    val points by robotElevatorViewModel.points.collectAsState()
     val robotState by robotElevatorViewModel.robotState.collectAsState()
     val selectedDoors by robotElevatorViewModel.selectedDoors.collectAsState()
-    val selectedPoint by robotElevatorViewModel.selectedPoint.collectAsState()
+    val selectedPoint by robotElevatorViewModel.selectedPoints.collectAsState()
+    val currentAction by robotElevatorViewModel.currentAction.collectAsState()
+    val isDeliveryConfirmed by robotElevatorViewModel.isDeliveryConfirmed.collectAsState()
+    val allStagesCompleted by robotElevatorViewModel.allStagesCompleted.collectAsState()
 
     // Truyền NavigationViewModel trực tiếp vào RobotElevatorViewModel
     LaunchedEffect(Unit) {
-        elevatorGoHomeViewModel.navigationViewModel = navigationViewModel
+        robotElevatorViewModel.navigationViewModel = navigationViewModel
         navigationViewModel.getCurrentPosition()
-        elevatorGoHomeViewModel.loadPoints()
+        robotElevatorViewModel.loadPoints()
     }
 
     Box(
@@ -99,9 +101,9 @@ fun RobotElevatorScreen(
 
                     SelectableBox(
                         text = "Cửa 1",
-                        isSelected = selectedDoors.first,
+                        isSelected = selectedDoors[0],
                         onClick = {
-                            robotElevatorViewModel.selectDoor(!selectedDoors.first, selectedDoors.second)
+                            robotElevatorViewModel.selectDoor(!selectedDoors[0], selectedDoors[1])
                         }
                     )
 
@@ -109,9 +111,9 @@ fun RobotElevatorScreen(
 
                     SelectableBox(
                         text = "Cửa 2",
-                        isSelected = selectedDoors.second,
+                        isSelected = selectedDoors[1],
                         onClick = {
-                            robotElevatorViewModel.selectDoor(selectedDoors.first, !selectedDoors.second)
+                            robotElevatorViewModel.selectDoor(selectedDoors[0], !selectedDoors[1])
                         }
                     )
                 }
@@ -135,10 +137,10 @@ fun RobotElevatorScreen(
                     ) {
                         items(points) { point ->
                             Button(
-                                onClick = { elevatorGoHomeViewModel.selectPoint(point.name ?: "Unknown", point.id) },
+                                onClick = { robotElevatorViewModel.selectPoint(point.name ?: "Unknown", point.id) },
                                 modifier = Modifier.padding(6.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedPoint == point.name) Color.Gray else Color.White
+                                    containerColor = if (selectedPoint.any { it.first == point.name }) Color.Gray else Color.White
                                 )
                             ) {
                                 Text(point.name ?: "Không có", color = Color.Black)
@@ -148,37 +150,35 @@ fun RobotElevatorScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Row {
+                    if (currentAction == "DeliveryNotification" && !isDeliveryConfirmed) {
                         Button(
                             onClick = {
-                                Log.e("aaaa", "eeee")
-                                val destinationId = elevatorGoHomeViewModel.getSelectedPointId()
-                                if (destinationId != null) {
-                                    elevatorGoHomeViewModel.requestRoute(destinationId)
+                                robotElevatorViewModel.openSelectedDoors()
+                                robotElevatorViewModel.confirmDelivery()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
+                            Text("Lấy hàng", color = Color.White)
+                        }
+                    }
+                    else if (currentAction == "DeliveryNotification" && isDeliveryConfirmed) {
+                        Button(
+                            onClick = { robotElevatorViewModel.closeDoorsAndMoveUp() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                        ) {
+                            Text("Xác nhận lấy hàng", color = Color.White)
+                        }
+                    } else{
+                        Button(
+                            onClick = {
+                                val destinationIds = selectedPoint.map { it.second }
+                                if (destinationIds.isNotEmpty()) {
+                                    robotElevatorViewModel.requestRoute(destinationIds)
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                         ) {
                             Text("Start", color = Color.White)
-                        }
-                        if (robotState == RobotState.IDLE) {
-                            Button(
-                                onClick = { robotElevatorViewModel.openSelectedDoors() },
-//                            modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                            ) {
-                                Text("Lấy hàng", color = Color.White)
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Button(
-                                onClick = { robotElevatorViewModel.closeDoorsAndMoveUp() },
-//                            modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                            ) {
-                                Text("Xác nhận lấy hàng", color = Color.White)
-                            }
                         }
                     }
                 }
