@@ -255,15 +255,15 @@ fun AddPointDialog(viewModel: SavePositionViewModel, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    Button(onClick = onDismiss) {
+                        Text("Hủy")
+                    }
                     Button(onClick = {
                         val typeInt = type.toIntOrNull() ?: 0
                         viewModel.savePoint(floorCode, name, typeInt)
                         onDismiss()
                     }) {
                         Text("Thêm")
-                    }
-                    Button(onClick = onDismiss) {
-                        Text("Hủy")
                     }
                 }
             }

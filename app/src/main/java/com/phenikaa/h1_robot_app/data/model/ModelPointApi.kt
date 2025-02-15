@@ -11,8 +11,6 @@ data class DataWrapper(
     @SerializedName("page") val page: Int,
     @SerializedName("total") val total: Int,
     @SerializedName("per_page") val perPage: Int,
-
-
 )
 
 data class Point(
@@ -54,6 +52,27 @@ data class NewPoint(
 data class Floor(
     @SerializedName("name") val name: String,
     @SerializedName("code") val code: String,
+)
+
+data class ModelPointsByFloorId(
+    @SerializedName("data") val data: List<DataPointsByFloorIdWrapper>
+)
+
+data class DataPointsByFloorIdWrapper(
+    @SerializedName("id") val id: Int,
+    @SerializedName("floor_id") val floor_id: Int,
+    @SerializedName("lift_id") val lift_id: Int,
+    @SerializedName("code") val code: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("notes") val notes: String ?= null,
+    @SerializedName("rotation") val rotation: Float,
+    @SerializedName("type") val type: Int,
+    @SerializedName("x") val x: Float,
+    @SerializedName("y") val y: Float,
+    @SerializedName("z") val z: Float,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String,
+    @SerializedName("deleted_at") val deletedAt: String ?= null,
 )
 
 

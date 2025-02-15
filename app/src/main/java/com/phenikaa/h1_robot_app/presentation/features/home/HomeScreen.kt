@@ -110,7 +110,7 @@ fun HomeScreen(
                         heightType = BoxHeightType.HALF,
                         layoutType = BoxLayoutType.HORIZONTAL,
                         onClick = {
-                            navController.navigate("navigation")
+                            navController.navigate("cruising_screen")
                         }
                     )
                 }

@@ -34,7 +34,7 @@ fun NavigationScreen(
 
     val mapList by viewModel.mapList.collectAsState()
     val mapListError by viewModel.mapListError.collectAsState()
-    val selectedMap by viewModel.selectedMap.collectAsState()
+    val selectedFloors by viewModel.selectedFloors.collectAsState()
 
     val position = """{"x": -6.4490547, "y": -14.451439, "z": 0.0, "rotation": 126.7954562}"""
 
@@ -396,7 +396,7 @@ fun NavigationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(text = mapName)
-                            if (mapName == selectedMap) {
+                            if (mapName == selectedFloors) {
                                 Text(
                                     text = "Selected",
                                     color = MaterialTheme.colorScheme.primary,
@@ -408,9 +408,9 @@ fun NavigationScreen(
                 }
 
                 // Nút Load Map
-                if (!selectedMap.isNullOrEmpty()) {
+                if (!selectedFloors.isNullOrEmpty()) {
                     Button(onClick = { viewModel.loadSelectedMap() }) {
-                        Text("Load Map: $selectedMap")
+//                        Text("Load Map: $selectedMap")
                     }
                 }
             }

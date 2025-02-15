@@ -3,7 +3,7 @@ package com.phenikaa.h1_robot_app.presentation.features.saveposition
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.phenikaa.h1_robot_app.data.api.ApiPointClient
+import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.NewPoint
 import com.phenikaa.h1_robot_app.data.model.Point
@@ -64,7 +64,7 @@ class SavePositionViewModel @Inject constructor(
     fun loadPoints(page: Int = 1) {
         viewModelScope.launch {
             try {
-                val response = ApiPointClient.apiService.getPoints(page, _perPage.value)
+                val response = PhenikaaMecApiClient.apiService.getPoints(page, _perPage.value)
 
                 if (response.data.points.isNotEmpty()) {
                     _points.value = response.data.points
@@ -92,7 +92,7 @@ class SavePositionViewModel @Inject constructor(
                     type = type
                 )
 
-                val response = ApiPointClient.apiService.savePoint(newPoint)
+                val response = PhenikaaMecApiClient.apiService.savePoint(newPoint)
                 if (response.isSuccessful) {
                     Log.d("API", "Thêm điểm mới thành công!")
                     loadPoints()
@@ -118,7 +118,7 @@ class SavePositionViewModel @Inject constructor(
                     type = type
                 )
 
-                val response = ApiPointClient.apiService.updatePoint(id, updatedPoint)
+                val response = PhenikaaMecApiClient.apiService.updatePoint(id, updatedPoint)
                 if (response.isSuccessful) {
                     Log.d("API", "Cập nhật điểm thành công!")
                     loadPoints()
@@ -134,7 +134,7 @@ class SavePositionViewModel @Inject constructor(
     fun deletePoint(id: Int) {
         viewModelScope.launch {
             try {
-                val response = ApiPointClient.apiService.deletePoint(id)
+                val response = PhenikaaMecApiClient.apiService.deletePoint(id)
                 if (response.isSuccessful) {
                     Log.d("API", "Xóa điểm thành công!")
                     loadPoints()

@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.phenikaa.h1_robot_app.presentation.features.cruising.CruisingScreen
 import com.phenikaa.h1_robot_app.presentation.features.elevator.RobotElevatorScreen
 import com.phenikaa.h1_robot_app.presentation.features.home.HomeScreen
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationScreen
@@ -60,6 +61,9 @@ fun AppNavHost(
             }
             composable(Screen.SavePositionScreen.route) {
                 SavePositionScreen()
+            }
+            composable(Screen.CruisingScreen.route) {
+                CruisingScreen()
             }
         }
     }

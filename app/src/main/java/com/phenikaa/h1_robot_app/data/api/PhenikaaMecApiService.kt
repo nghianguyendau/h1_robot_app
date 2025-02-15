@@ -1,21 +1,24 @@
 package com.phenikaa.h1_robot_app.data.api
 
+import com.phenikaa.h1_robot_app.data.model.ModelFloorApi
 import com.phenikaa.h1_robot_app.data.model.ModelPointApi
+import com.phenikaa.h1_robot_app.data.model.ModelPointsByFloorId
 import com.phenikaa.h1_robot_app.data.model.NewPoint
-import com.phenikaa.h1_robot_app.data.model.Point
-import com.phenikaa.h1_robot_app.data.model.RosPosition
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-interface PointsApiService {
+interface PhenikaaMecApiService {
+    // points
     @GET("points")
     suspend fun getPoints(
         @Query("page") page: Int,
         @Query("per_page") perPage: Int
     ): ModelPointApi
+
+    @GET("points/{floor_id}")
+    suspend fun getPointsByFloorId(@Path("floor_id") floorId: Int): ModelPointsByFloorId
 
     @POST("points")
     suspend fun savePoint(@Body point: NewPoint): Response<Unit>
@@ -25,16 +28,24 @@ interface PointsApiService {
 
     @DELETE("points/{id}")
     suspend fun deletePoint(@Path("id") id: Int): Response<Unit>
+
+    // floors
+    @GET("floors") // get all floors
+    suspend fun getAllFloors(
+        @Query("page") page: Int,
+        @Query("per_page") perPage: Int
+    ): ModelFloorApi
+
 }
 
-object ApiPointClient {
-    private const val BASE_URL = "https://robotic-phenikaa-mec-server.phx.asia/"
+object PhenikaaMecApiClient {
+    private const val BASE_URL = "https://1508-42-112-211-205.ngrok-free.app/"
 
-    val apiService: PointsApiService by lazy {
+    val apiService: PhenikaaMecApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(PointsApiService::class.java)
+            .create(PhenikaaMecApiService::class.java)
     }
 }
