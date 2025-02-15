@@ -5,11 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.model.RosPosition
@@ -22,6 +27,7 @@ fun NavigationScreen(
 ) {
     val navigationState by viewModel.navigationState.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
+    val savedPosition by viewModel.savedPosition.collectAsState()
     val navigationResult by viewModel.navigationResult.collectAsState()
 
     val currentSpeed by viewModel.currentSpeed.collectAsState()
@@ -50,6 +56,9 @@ fun NavigationScreen(
             }
         }
     }
+
+    var showDialog by remember { mutableStateOf(false) }
+    var pointName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentPosition()
@@ -100,7 +109,12 @@ fun NavigationScreen(
 
         // Navigation Controls
         Row {
-            Column {
+            Column(modifier = Modifier
+                .fillMaxHeight()
+                .imePadding()
+                .verticalScroll(
+                    rememberScrollState()
+                )) {
                 Row(
 //                    modifier = Modifier.fillMaxWidth(),
 //                    horizontalArrangement = Arrangement.SpaceEvenly
@@ -213,8 +227,39 @@ fun NavigationScreen(
                 ) {
                     DirectionButton(
                         text = "Save Position",
-                        onClick = { viewModel.saveCurrentPosition() }
+                        onClick = { showDialog = true }
                     )
+
+                    if (showDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDialog = false },
+                            title = { Text("Nhập Tên Điểm") },
+                            text = {
+                                TextField(
+                                    value = pointName,
+                                    onValueChange = { pointName = it },
+                                    label = { Text("Tên điểm") }
+                                )
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        if (pointName.isNotEmpty()) {
+                                            viewModel.saveCurrentPosition(pointName)
+                                            showDialog = false
+                                        }
+                                    }
+                                ) {
+                                    Text("Xác nhận")
+                                }
+                            },
+                            dismissButton = {
+                                Button(onClick = { showDialog = false }) {
+                                    Text("Hủy")
+                                }
+                            }
+                        )
+                    }
                     DirectionButton(
                         text = "Go",
                         onClick = { viewModel.navigateToSavedPosition() }
@@ -272,6 +317,8 @@ fun NavigationScreen(
                     )
                 }
 
+
+
                 //            Row {
                 //                Text("Map Controls", style = MaterialTheme.typography.titleMedium)
                 //
@@ -301,7 +348,24 @@ fun NavigationScreen(
                 //                }
                 //            }
 
+                Text(
+                    text = "Vị Trí Đã Lưu:",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (savedPosition != null) {
+                    Text(
+                        text = "Tên điểm: ${savedPosition?.poseName}\n" +
+                                "X: ${savedPosition?.pos?.x}, Y: ${savedPosition?.pos?.y}, Z: ${savedPosition?.pos?.z}\n" +
+                                "Rotation: ${savedPosition?.pos?.rotation}",
+                        fontSize = 16.sp
+                    )
+                } else {
+                    Text("Chưa có vị trí nào được lưu", fontSize = 16.sp, color = Color.Gray)
+                }
 
 
             }

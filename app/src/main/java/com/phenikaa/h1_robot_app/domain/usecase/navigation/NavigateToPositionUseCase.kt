@@ -8,7 +8,7 @@ import javax.inject.Inject
 class NavigateToPositionUseCase @Inject constructor(
     private val navigationRepository: NavigationRepository
 ) {
-    suspend operator fun invoke(position: String) =
+    suspend operator fun invoke(position: RosPosition) =
         navigationRepository.navigateToPosition(position)
 
 //    suspend fun navigateToPosition(position: RosPosition) = navigationRepository.navigateToPosition(position)

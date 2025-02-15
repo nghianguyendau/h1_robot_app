@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface NavigationRepository {
     suspend fun getCurrentPosition(): Position
-    suspend fun navigateToPosition(position: String): Boolean
+    suspend fun navigateToPosition(position: RosPosition): Boolean
     suspend fun navigateToPosition2(position: String): Boolean
     suspend fun navigateToDestination(position: String): Boolean
     suspend fun cancelNavigation()

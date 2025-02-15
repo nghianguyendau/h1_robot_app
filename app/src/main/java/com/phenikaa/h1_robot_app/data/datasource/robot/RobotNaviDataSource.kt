@@ -62,7 +62,7 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     // Điều hướng đến một vị trí
-    suspend fun navigateToPosition(position: String): Boolean = suspendCoroutine { continuation ->
+    suspend fun navigateToPosition(position: RosPosition): Boolean = suspendCoroutine { continuation ->
         // Biến cờ để kiểm soát việc gọi resume
         var isResumed = false
         Log.e("000000", "1111111")
@@ -74,11 +74,16 @@ class RobotNaviDataSource @Inject constructor(
 //            jsonObject.put("z",0.0)
 //            jsonObject.put("rotation", 92.71033)
 
-            jsonObject.put("x", 2.6824255)
-            jsonObject.put("y", -0.2290653)
-            jsonObject.put("z",0.0)
-            jsonObject.put("rotation", -0.2657993)
-            Log.e("111111", "22222222")
+//            jsonObject.put("x", 2.6824255)
+//            jsonObject.put("y", -0.2290653)
+//            jsonObject.put("z",0.0)
+//            jsonObject.put("rotation", -0.2657993)
+//            Log.e("111111", "22222222")
+
+            jsonObject.put("x", position.pos.x)
+            jsonObject.put("y", position.pos.y)
+            jsonObject.put("z", position.pos.z)
+            jsonObject.put("rotation", position.pos.rotation)
 
             val json = jsonObject.toString()
 

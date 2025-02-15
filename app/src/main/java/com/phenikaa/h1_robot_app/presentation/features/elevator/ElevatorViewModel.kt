@@ -16,12 +16,14 @@ import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPosition2UseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationViewModel
 import com.phenikaa.h1_robot_app.state.RobotState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.Locale
@@ -36,6 +38,7 @@ class ElevatorViewModel @Inject constructor(
     private val naviDataSource: RobotNaviDataSource,
     private val mapUseCase: MapUseCase,
     private val moveDirection: MoveDirectionUseCase,
+    private val doorControlUseCase: RobotDoorUseCase
 ) : ViewModel() {
 
     lateinit var navigationViewModel: NavigationViewModel
@@ -61,9 +64,17 @@ class ElevatorViewModel @Inject constructor(
     // Theo dõi hướng di chuyển của robot
     private val _currentJourney = MutableStateFlow<JourneyDirection>(JourneyDirection.NONE)
 
+    private val _selectedDoors = MutableStateFlow<Pair<Boolean, Boolean>>(false to false)
+    val selectedDoors: StateFlow<Pair<Boolean, Boolean>> = _selectedDoors.asStateFlow()
+
+    private val _selectedPoint = MutableStateFlow<String?>(null)
+    val selectedPoint: StateFlow<String?> get() = _selectedPoint
+
+
+
     enum class JourneyDirection {
-        DOWN_13_TO_1,
-        UP_1_TO_13,
+        START_TO_WORK,
+        GO_HOME,
         NONE
     }
 
@@ -73,8 +84,8 @@ class ElevatorViewModel @Inject constructor(
 
 
     init {
-        connectWebSocket()
-        listenToElevatorMessages()
+//        connectWebSocket()
+//        listenToElevatorMessages()
     }
 
     // Kết nối WebSocket
@@ -92,29 +103,43 @@ class ElevatorViewModel @Inject constructor(
         }
     }
 
+    fun selectPoint(point: String) {
+        _selectedPoint.value = point
+        Log.d("Elevator", "Selected point: $point")
+    }
+
     // Gọi thang máy đi xuống (13->1)
     fun callElevatorDown(currentFloor: Int = 13, destinationFloor: Int = 1) {
-        _currentJourney.value = JourneyDirection.DOWN_13_TO_1
-        _robotState.value = RobotState.CALLING_ELEVATOR
-        viewModelScope.launch {
-            try {
-                val response = elevatorRepository.callElevator(
-                    currentFloor = currentFloor,
-                    destinationFloor = destinationFloor
-                )
-                Log.d("Elevator", "Down Journey Response: $response")
+        val point = _selectedPoint.value
+        if(point != null){
+            _currentJourney.value = JourneyDirection.START_TO_WORK
+            _robotState.value = RobotState.CALLING_ELEVATOR
 
-                _robotState.value = RobotState.WAITING_FOR_ELEVATOR
-                navigateToElevatorPoint()
-            } catch (e: Exception) {
-                Log.e("Elevator", "Error calling elevator for down journey: ${e.message}")
+            // Lưu trạng thái cửa đã chọn trước khi gọi thang máy
+            _selectedDoors.value = _selectedDoors.value
+
+            viewModelScope.launch {
+                try {
+                    val response = elevatorRepository.callElevator(
+                        currentFloor = currentFloor,
+                        destinationFloor = destinationFloor
+                    )
+                    Log.d("Elevator", "Down Journey Response: $response")
+
+                    _robotState.value = RobotState.WAITING_FOR_ELEVATOR
+                    navigateToElevatorPoint()
+                } catch (e: Exception) {
+                    Log.e("Elevator", "Error calling elevator for down journey: ${e.message}")
+                }
             }
+        } else {
+            Log.e("Elevator", "No point selected")
         }
     }
 
     // Gọi thang máy đi lên (1->13)
     fun callElevatorUp(currentFloor: Int = 1, destinationFloor: Int = 13) {
-        _currentJourney.value = JourneyDirection.UP_1_TO_13
+        _currentJourney.value = JourneyDirection.GO_HOME
         _robotState.value = RobotState.CALLING_ELEVATOR
         viewModelScope.launch {
             try {
@@ -135,71 +160,71 @@ class ElevatorViewModel @Inject constructor(
 
     // Xử lý tin nhắn từ WebSocket
     private suspend fun handleElevatorMessage(message: String) {
-        try {
-            Log.d("ElevatorMessage", "Received message: $message")
-            val jsonObject = JSONObject(message)
-            val event = jsonObject.getString("event")
-
-            when (event) {
-                "elevator-arrived-to-pick-up-robot" -> {
-                    val data = jsonObject.getJSONObject("data")
-                    if (data.has("task_id")) {
-                        val taskId = data.getInt("task_id")
-                        _taskId.value = taskId
-                        Log.d("ElevatorMessage", "Task ID received: $taskId")
-
-                        if (jsonObject.has("msg_id")) {
-                            val msgId = jsonObject.getString("msg_id")
-                            sendRobotConfirmation(msgId)
-                        }
-                        waitForElevatorPointAndProceed()
-                    }
-                }
-
-                "elevator-arrived-to-destination" -> {
-                    val data = jsonObject.getJSONObject("data")
-                    if (data.has("task_id")) {
-                        val msgId = jsonObject.getString("msg_id")
-                        sendRobotConfirmation(msgId)
-
-                        Log.e("iiiiii", _robotState.value.toString())
-
-                        if (_robotState.value == RobotState.INSIDE_CABIN) {
-                            _robotState.value = RobotState.MOVING_TO_EXIT_CABIN
-                            navigateToPositionUseCase.setSpeed(0.2f)
-                            delay(5000)
-                            when (_currentJourney.value) {
-                                JourneyDirection.DOWN_13_TO_1 -> {
-                                    loadMapByName("1-2")
-                                    Log.e("iiiiii", "Down 1")
-                                    navigateToExitCabin()
-                                }
-
-                                JourneyDirection.UP_1_TO_13 -> {
-                                    loadMapByName("12A-2")
-                                    Log.e("iiiiii", "Up 13")
-
-//                                    navigateToReturnExitCabin()
-                                    navigateToExitCabin()
-//                                    navigateToDestination(positionDes)
-
-                                }
-
-                                JourneyDirection.NONE -> {
-                                    Log.e("ElevatorMessage", "No journey direction specified")
-                                }
-                            }
-                        }
-
-                        else {
-                            Log.e("iiiiiii", "dadadadadadadadadadada")
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("ElevatorMessage", "Error parsing elevator message: ${e.message}")
-        }
+//        try {
+//            Log.d("ElevatorMessage", "Received message: $message")
+//            val jsonObject = JSONObject(message)
+//            val event = jsonObject.getString("event")
+//
+//            when (event) {
+//                "elevator-arrived-to-pick-up-robot" -> {
+//                    val data = jsonObject.getJSONObject("data")
+//                    if (data.has("task_id")) {
+//                        val taskId = data.getInt("task_id")
+//                        _taskId.value = taskId
+//                        Log.d("ElevatorMessage", "Task ID received: $taskId")
+//
+//                        if (jsonObject.has("msg_id")) {
+//                            val msgId = jsonObject.getString("msg_id")
+//                            sendRobotConfirmation(msgId)
+//                        }
+//                        waitForElevatorPointAndProceed()
+//                    }
+//                }
+//
+//                "elevator-arrived-to-destination" -> {
+//                    val data = jsonObject.getJSONObject("data")
+//                    if (data.has("task_id")) {
+//                        val msgId = jsonObject.getString("msg_id")
+//                        sendRobotConfirmation(msgId)
+//
+//                        Log.e("iiiiii", _robotState.value.toString())
+//
+//                        if (_robotState.value == RobotState.INSIDE_CABIN) {
+//                            _robotState.value = RobotState.MOVING_TO_EXIT_CABIN
+//                            navigateToPositionUseCase.setSpeed(0.3f)
+//                            delay(5000)
+//                            when (_currentJourney.value) {
+//                                JourneyDirection.START_TO_WORK -> {
+//                                    loadMapByName("1-2")
+//                                    Log.e("iiiiii", "Down 1")
+//                                    navigateToExitCabin()
+//                                }
+//
+//                                JourneyDirection.GO_HOME -> {
+//                                    loadMapByName("12A-2")
+//                                    Log.e("iiiiii", "Up 13")
+//
+////                                    navigateToReturnExitCabin()
+//                                    navigateToExitCabin()
+////                                    navigateToDestination(positionDes)
+//
+//                                }
+//
+//                                JourneyDirection.NONE -> {
+//                                    Log.e("ElevatorMessage", "No journey direction specified")
+//                                }
+//                            }
+//                        }
+//
+//                        else {
+//                            Log.e("iiiiiii", "dadadadadadadadadadada")
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (e: Exception) {
+//            Log.e("ElevatorMessage", "Error parsing elevator message: ${e.message}")
+//        }
     }
 
     // Gửi xác nhận robot
@@ -268,10 +293,10 @@ class ElevatorViewModel @Inject constructor(
                 if (isReached) {
                     _robotState.value = RobotState.MOVING_TO_CABIN
 //                    delay(5000)
-                    navigateToPositionUseCase.setSpeed(0.2f)
+                    navigateToPositionUseCase.setSpeed(0.3f)
                     when (_currentJourney.value) {
-                        JourneyDirection.DOWN_13_TO_1 -> navigateToCabin()
-                        JourneyDirection.UP_1_TO_13 -> navigateToCabin()
+                        JourneyDirection.START_TO_WORK -> navigateToCabin()
+                        JourneyDirection.GO_HOME -> navigateToCabin()
                         JourneyDirection.NONE -> Log.e(
                             "Navigation",
                             "No journey direction specified"
@@ -346,7 +371,7 @@ class ElevatorViewModel @Inject constructor(
                         sendRobotExitCabinMessage(currentTaskId)
                         _robotState.value = RobotState.IDLE
                         navigateToPositionUseCase.setSpeed(0.8f)
-                        if (_currentJourney.value == JourneyDirection.UP_1_TO_13) {
+                        if (_currentJourney.value == JourneyDirection.GO_HOME) {
                             goHome()
                             Log.d("NavigationViewModel", "Robot is going home after exiting cabin at floor 13")
                         }
@@ -395,5 +420,32 @@ class ElevatorViewModel @Inject constructor(
             moveDirection.goHome()
         }
     }
+
+    fun selectDoor(door1: Boolean, door2: Boolean) {
+        _selectedDoors.value = Pair(door1, door2)
+    }
+
+    fun openSelectedDoors() {
+        val (door1, door2) = _selectedDoors.value
+
+        viewModelScope.launch {
+            if (door1) doorControlUseCase.openOneFloorDoor()
+            if (door2) doorControlUseCase.openTwoFloorDoor()
+        }
+    }
+
+    fun closeDoorsAndMoveUp() {
+        val (door1, door2) = _selectedDoors.value
+
+        viewModelScope.launch {
+            if (door1) doorControlUseCase.closeOneFloorDoor()
+            if (door2) doorControlUseCase.closeTwoFloorDoor()
+
+            delay(2000)
+
+            callElevatorUp()
+        }
+    }
+
 }
 

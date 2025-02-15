@@ -80,7 +80,7 @@ fun HomeScreen(
                     heightType = BoxHeightType.FULL,
                     layoutType = BoxLayoutType.VERTICAL,
                     onClick = {
-                        navController.navigate("phone_call")
+                        navController.navigate("savePose_screen")
                     }
                 )
 

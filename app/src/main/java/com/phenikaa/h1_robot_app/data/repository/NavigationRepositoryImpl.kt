@@ -45,7 +45,7 @@ class NavigationRepositoryImpl @Inject constructor(
 //        }
 //    }
 
-    override suspend fun navigateToPosition(position: String): Boolean {
+    override suspend fun navigateToPosition(position: RosPosition): Boolean {
         return naviDataSource.navigateToPosition(position)
     }
 

@@ -12,6 +12,7 @@ import com.phenikaa.h1_robot_app.presentation.features.home.HomeScreen
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationScreen
 import com.phenikaa.h1_robot_app.presentation.features.phonecall.PhoneCallScreen
 import com.phenikaa.h1_robot_app.presentation.features.robotdoor.RobotDoorScreen
+import com.phenikaa.h1_robot_app.presentation.features.saveposition.SavePositionScreen
 import com.phenikaa.h1_robot_app.presentation.features.websocket.WebSocketScreen
 import com.phenikaa.h1_robot_app.ui.components.CustomTopAppBar
 
@@ -56,6 +57,9 @@ fun AppNavHost(
             }
             composable(Screen.ElevatorScreen.route) {
                 RobotElevatorScreen()
+            }
+            composable(Screen.SavePositionScreen.route) {
+                SavePositionScreen()
             }
         }
     }

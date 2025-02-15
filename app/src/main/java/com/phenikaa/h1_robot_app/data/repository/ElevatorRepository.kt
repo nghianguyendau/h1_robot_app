@@ -32,7 +32,8 @@ class ElevatorRepository @Inject constructor(
         return ApiClient.apiService.callElevator(request, "RobotSN01")
     }
     fun connect() {
-        baseWebSocketDataSource.connect("wss://robotic-elevator-api.phx.asia?type=ROBOT&serial_number=RobotSN01")
+//        baseWebSocketDataSource.connect("wss://robotic-elevator-api.phx.asia?type=ROBOT&serial_number=RobotSN01")
+        baseWebSocketDataSource.connect("ws://robotic-phenikaa-mec-server.phx.asia?type=ROBOT&serial_number=SN01")
     }
 
     fun disconnect() {

@@ -141,12 +141,22 @@ class NavigationViewModel @Inject constructor(
     private val _navigationResult = MutableStateFlow<Boolean?>(null)
     val navigationResult: StateFlow<Boolean?> get() = _navigationResult
 
-    fun saveCurrentPosition() {
+    fun saveCurrentPosition(name: String) {
         viewModelScope.launch {
             try {
                 val currentPosition = naviDataSource.getCurrentPosition()
-                _savedPosition.value = currentPosition
-                Log.d("NavigationViewModel", "Saved position: $currentPosition")
+
+                val rosPosition = RosPosition(
+                    poseName = name,
+                    pos = RosPosition.PosBean(
+                        x = currentPosition.pos.x,
+                        y = currentPosition.pos.y,
+                        z = currentPosition.pos.z,
+                        rotation = currentPosition.pos.rotation
+                    )
+                )
+                _savedPosition.value = rosPosition
+                Log.d("NavigationViewModel", "Saved position: $rosPosition")
             } catch (e: Exception) {
                 Log.e("NavigationViewModel", "Error saving position: ${e.message}")
             }
@@ -171,7 +181,7 @@ class NavigationViewModel @Inject constructor(
     }
 
     fun navigateToSavedPosition() {
-        val position = "x= 16.090723f, y=-7.5906825f, z=0.0f, rotation=92.71033f"
+        val position = _savedPosition.value
         if (position == null) {
             Log.e("NavigationViewModel", "No position saved to navigate to")
             return
