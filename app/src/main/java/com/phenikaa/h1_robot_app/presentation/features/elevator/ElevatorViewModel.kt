@@ -5,17 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
-import com.phenikaa.h1_robot_app.data.model.RosPosition
+import com.phenikaa.h1_robot_app.data.api.ApiPointClient
+import com.phenikaa.h1_robot_app.data.api.PointsApiService
+import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
-import com.phenikaa.h1_robot_app.domain.model.Position
-import com.phenikaa.h1_robot_app.domain.usecase.elevator.CallElevatorUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.elevator.MonitorElevatorTaskUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.navigation.MapUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPosition2UseCase
-import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationViewModel
 import com.phenikaa.h1_robot_app.state.RobotState
@@ -25,67 +19,88 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class ElevatorViewModel @Inject constructor(
-    private val elevatorRepository: ElevatorRepository,
-    private val navigateToPositionUseCase: NavigateToPositionUseCase,
-    private val navigateToPosition2UseCase: NavigateToPosition2UseCase,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
-    private val naviDataSource: RobotNaviDataSource,
-    private val mapUseCase: MapUseCase,
-    private val moveDirection: MoveDirectionUseCase,
+    private val elevatorRepository: ElevatorRepository,
     private val doorControlUseCase: RobotDoorUseCase
+
 ) : ViewModel() {
+
+    private val _points = MutableStateFlow<List<Point>>(emptyList())
+    val points: StateFlow<List<Point>> get() = _points
 
     lateinit var navigationViewModel: NavigationViewModel
 
     fun initNavigationViewModel(owner: ViewModelStoreOwner) {
         navigationViewModel = ViewModelProvider(owner)[NavigationViewModel::class.java]
     }
-
     private val _robotState = MutableStateFlow<RobotState>(RobotState.IDLE)
     val robotState: StateFlow<RobotState> = _robotState
 
-    private val _messages = MutableStateFlow<List<String>>(emptyList())
-    val messages: StateFlow<List<String>> = _messages
+    private var taskId: Int? = null
+    private var currentStepIndex = 0
+    private var navigationSteps: List<JSONObject> = emptyList()
+    private var stageId: Int? = null
 
-    private val _navigationResult = MutableStateFlow<Boolean?>(null)
-    val navigationResult: StateFlow<Boolean?> = _navigationResult
+    private val _currentPage = MutableStateFlow(1)
+    val currentPage: StateFlow<Int> get() = _currentPage
 
-    private val _taskId = MutableStateFlow<Int?>(null)
-    val taskId: StateFlow<Int?> = _taskId
+    private val _perPage = MutableStateFlow(10)
+    val perPage: StateFlow<Int> get() = _perPage
 
-    private val _isElevatorPointReached = MutableStateFlow(false)
+    private val _totalPages = MutableStateFlow(1)
+    val totalPages: StateFlow<Int> get() = _totalPages
 
-    // Theo dõi hướng di chuyển của robot
-    private val _currentJourney = MutableStateFlow<JourneyDirection>(JourneyDirection.NONE)
+    private val _selectedPoints = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
+    val selectedPoints: StateFlow<List<Pair<String, Int>>> get() = _selectedPoints
 
-    private val _selectedDoors = MutableStateFlow<Pair<Boolean, Boolean>>(false to false)
-    val selectedDoors: StateFlow<Pair<Boolean, Boolean>> = _selectedDoors.asStateFlow()
-
-    private val _selectedPoint = MutableStateFlow<String?>(null)
-    val selectedPoint: StateFlow<String?> get() = _selectedPoint
-
+    private var currentTargetIndex = 0 // Biến theo dõi điểm hiện tại
 
 
-    enum class JourneyDirection {
-        START_TO_WORK,
-        GO_HOME,
-        NONE
-    }
+    private var selectedPointId: Int? = null
 
-    val positionDes = """{"x": -6.4490547, "y": -14.451439, "z": 0.0, "rotation": 126.7954562}"""
-    val positionOutSide = """{"x": 2.6824255, "y": -0.2290653, "z": 0.0, "rotation": -0.2657993}"""
-    val positionInSide = """{"x": -0.21469636, "y": 0.006519, "z": 0.0, "rotation": -0.19207564}"""
+    private val _selectedDoors = MutableStateFlow<List<Boolean>>(listOf(false, false))
+    val selectedDoors: StateFlow<List<Boolean>> get() = _selectedDoors
+
+    private var _routeAnalyzeData: JSONObject? = null
+
+    private val _currentAction = MutableStateFlow<String?>(null)
+    val currentAction: StateFlow<String?> get() = _currentAction
+
+    private val _isDeliveryConfirmed = MutableStateFlow(false)
+    val isDeliveryConfirmed: StateFlow<Boolean> get() = _isDeliveryConfirmed
+
+    private val _allStagesCompleted = MutableStateFlow(false)
+    val allStagesCompleted: StateFlow<Boolean> get() = _allStagesCompleted
+
+
 
 
     init {
-//        connectWebSocket()
-//        listenToElevatorMessages()
+        connectWebSocket()
+        listenToWebSocket()
+    }
+
+    fun loadPoints(page: Int = 1) {
+        viewModelScope.launch {
+            try {
+                val response = ApiPointClient.apiService.getPoints(page, _perPage.value)
+
+                if (response.data.points.isNotEmpty()) {
+                    _points.value = response.data.points
+                    _currentPage.value = page
+                    _totalPages.value = maxOf((response.data.total / _perPage.value), 1)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     // Kết nối WebSocket
@@ -93,336 +108,225 @@ class ElevatorViewModel @Inject constructor(
         elevatorRepository.connect()
     }
 
-    // Lắng nghe tin nhắn từ WebSocket
-    private fun listenToElevatorMessages() {
+    private fun listenToWebSocket() {
         viewModelScope.launch {
             elevatorRepository.receiveMessages().collect { message ->
-                _messages.value = _messages.value + message
-                handleElevatorMessage(message)
+                handleWebSocketMessage(message)
+                Log.e("ddddd", "hhhhh")
             }
         }
     }
 
-    fun selectPoint(point: String) {
-        _selectedPoint.value = point
-        Log.d("Elevator", "Selected point: $point")
+    private fun handleWebSocketMessage(message: String) {
+        Log.e("ddd", "iiiiiii")
+        val jsonObject = JSONObject(message)
+        when (jsonObject.getString("event")) {
+            "route_analyze" -> handleRouteAnalyze(jsonObject)
+            "task_step_confirmed" -> handleTaskStepConfirmed(jsonObject)
+            "stage_finished" -> handleStageFinished(jsonObject)
+        }
     }
 
-    // Gọi thang máy đi xuống (13->1)
-    fun callElevatorDown(currentFloor: Int = 13, destinationFloor: Int = 1) {
-        val point = _selectedPoint.value
-        if(point != null){
-            _currentJourney.value = JourneyDirection.START_TO_WORK
-            _robotState.value = RobotState.CALLING_ELEVATOR
+    private fun handleRouteAnalyze(json: JSONObject) {
+        Log.e("ElevatorViewModel", "Processing route_analyze")
 
-            // Lưu trạng thái cửa đã chọn trước khi gọi thang máy
-            _selectedDoors.value = _selectedDoors.value
+        if (json.getString("status") == "success") {
+            _routeAnalyzeData = json // Lưu lại toàn bộ dữ liệu của message
 
-            viewModelScope.launch {
-                try {
-                    val response = elevatorRepository.callElevator(
-                        currentFloor = currentFloor,
-                        destinationFloor = destinationFloor
-                    )
-                    Log.d("Elevator", "Down Journey Response: $response")
+            val data = json.getJSONObject("data")
+            taskId = data.getInt("task_id")
+            val stages = data.getJSONArray("data")
 
-                    _robotState.value = RobotState.WAITING_FOR_ELEVATOR
-                    navigateToElevatorPoint()
-                } catch (e: Exception) {
-                    Log.e("Elevator", "Error calling elevator for down journey: ${e.message}")
-                }
+            if (stages.length() > 0) {
+                startStage(stages, 0)
             }
+        }
+    }
+
+
+
+    private fun handleTaskStepConfirmed(json: JSONObject) {
+        val confirmationCode = json.getJSONObject("data").getString("confirmation_code")
+        Log.d("ElevatorViewModel", "Step confirmed: $confirmationCode")
+
+        currentStepIndex++
+        if (currentStepIndex < navigationSteps.size) {
+            executeNextStep()
         } else {
-            Log.e("Elevator", "No point selected")
+            Log.d("ElevatorViewModel", "Stage completed, sending stage_finished event")
+            sendStageFinished()
         }
     }
 
-    // Gọi thang máy đi lên (1->13)
-    fun callElevatorUp(currentFloor: Int = 1, destinationFloor: Int = 13) {
-        _currentJourney.value = JourneyDirection.GO_HOME
-        _robotState.value = RobotState.CALLING_ELEVATOR
-        viewModelScope.launch {
-            try {
-                val response = elevatorRepository.callElevator(
-                    currentFloor = currentFloor,
-                    destinationFloor = destinationFloor
-                )
-                Log.d("Elevator", "Up Journey Response: $response")
+    private fun handleStageFinished(json: JSONObject) {
+        Log.d("ElevatorViewModel", "Stage completed, checking for next target...")
 
-                _robotState.value = RobotState.WAITING_FOR_ELEVATOR
-//                navigateToReturnElevatorPoint()
-                navigateToElevatorPoint()
-            } catch (e: Exception) {
-                Log.e("Elevator", "Error calling elevator for up journey: ${e.message}")
+        val finishedStageId = json.getJSONObject("data").getInt("stage_id")
+
+        // Kiểm tra danh sách stage từ dữ liệu gốc route_analyze
+        val stages = _routeAnalyzeData?.getJSONObject("data")?.getJSONArray("data") ?: return
+        val nextStageIndex = findStageIndexById(stages, finishedStageId) + 1
+
+        if (nextStageIndex < stages.length()) {
+            Log.d("ElevatorViewModel", "Starting next stage...")
+
+            startStage(stages, nextStageIndex) // Chuyển sang stage tiếp theo
+        } else {
+            Log.d("ElevatorViewModel", "All stages completed.")
+            _allStagesCompleted.value = true // Hiển thị lại nút Start
+        }
+    }
+
+
+
+
+    private fun startStage(stages: JSONArray, stageIndex: Int) {
+        val stage = stages.getJSONObject(stageIndex)
+        stageId = stage.getInt("stage_id")
+        navigationSteps = parseNavigationSteps(stage.getJSONArray("navigation_steps"))
+
+        Log.d("ElevatorViewModel", "Starting Stage $stageId with ${navigationSteps.size} steps")
+
+        currentStepIndex = 0
+        executeNextStep() // Thực hiện bước đầu tiên của stage mới
+    }
+
+    private fun findStageIndexById(stages: JSONArray, stageId: Int): Int {
+        for (i in 0 until stages.length()) {
+            if (stages.getJSONObject(i).getInt("stage_id") == stageId) {
+                return i
             }
         }
+        return -1
     }
 
-    // Xử lý tin nhắn từ WebSocket
-    private suspend fun handleElevatorMessage(message: String) {
-//        try {
-//            Log.d("ElevatorMessage", "Received message: $message")
-//            val jsonObject = JSONObject(message)
-//            val event = jsonObject.getString("event")
-//
-//            when (event) {
-//                "elevator-arrived-to-pick-up-robot" -> {
-//                    val data = jsonObject.getJSONObject("data")
-//                    if (data.has("task_id")) {
-//                        val taskId = data.getInt("task_id")
-//                        _taskId.value = taskId
-//                        Log.d("ElevatorMessage", "Task ID received: $taskId")
-//
-//                        if (jsonObject.has("msg_id")) {
-//                            val msgId = jsonObject.getString("msg_id")
-//                            sendRobotConfirmation(msgId)
-//                        }
-//                        waitForElevatorPointAndProceed()
-//                    }
-//                }
-//
-//                "elevator-arrived-to-destination" -> {
-//                    val data = jsonObject.getJSONObject("data")
-//                    if (data.has("task_id")) {
-//                        val msgId = jsonObject.getString("msg_id")
-//                        sendRobotConfirmation(msgId)
-//
-//                        Log.e("iiiiii", _robotState.value.toString())
-//
-//                        if (_robotState.value == RobotState.INSIDE_CABIN) {
-//                            _robotState.value = RobotState.MOVING_TO_EXIT_CABIN
-//                            navigateToPositionUseCase.setSpeed(0.3f)
-//                            delay(5000)
-//                            when (_currentJourney.value) {
-//                                JourneyDirection.START_TO_WORK -> {
-//                                    loadMapByName("1-2")
-//                                    Log.e("iiiiii", "Down 1")
-//                                    navigateToExitCabin()
-//                                }
-//
-//                                JourneyDirection.GO_HOME -> {
-//                                    loadMapByName("12A-2")
-//                                    Log.e("iiiiii", "Up 13")
-//
-////                                    navigateToReturnExitCabin()
-//                                    navigateToExitCabin()
-////                                    navigateToDestination(positionDes)
-//
-//                                }
-//
-//                                JourneyDirection.NONE -> {
-//                                    Log.e("ElevatorMessage", "No journey direction specified")
-//                                }
-//                            }
-//                        }
-//
-//                        else {
-//                            Log.e("iiiiiii", "dadadadadadadadadadada")
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (e: Exception) {
-//            Log.e("ElevatorMessage", "Error parsing elevator message: ${e.message}")
-//        }
+
+
+    private fun parseNavigationSteps(jsonArray: JSONArray): List<JSONObject> {
+        return (0 until jsonArray.length()).map { index -> jsonArray.getJSONObject(index) }
     }
 
-    // Gửi xác nhận robot
-    private fun sendRobotConfirmation(msgId: String) {
-        val confirmationMessage = JSONObject().apply {
-            put("event", "robot-confirmation")
-            put("data", JSONObject().apply {
-                put("msg_id", msgId)
-            })
-        }.toString()
+    private fun executeNextStep() {
+        if (currentStepIndex >= navigationSteps.size) return
+
+        val step = navigationSteps[currentStepIndex]
+        val action = step.getString("action")
+        val confirmationCode = step.getString("confirmation_code")
+
+        _currentAction.value = action // Cập nhật hành động hiện tại
+
+        Log.d("ElevatorViewModel", "Executing action: $action")
 
         viewModelScope.launch {
-            try {
-                elevatorRepository.sendMessage(confirmationMessage)
-                Log.d("WebSocket iii", "Sent robot confirmation: $confirmationMessage")
-            } catch (e: Exception) {
-                Log.e("WebSocket iiii", "Error sending robot confirmation: ${e.message}")
-            }
-        }
-    }
+            when (action) {
+                "MoveToTarget" -> {
+                    val pose = step.getJSONObject("pose")
+                    val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
+                    Log.d("ElevatorViewModel", "Moving to target: $position")
 
-    // Gửi thông báo robot đã vào cabin
-    fun sendRobotInCabinMessage(taskId: Int) {
-        val message = JSONObject().apply {
-            put("event", "robot-went-in-cabin")
-            put("data", JSONObject().apply {
-                put("msg_id", "robot-went-in-cabin_$taskId")
-                put("task_id", taskId)
-            })
-        }.toString()
-
-        viewModelScope.launch {
-            try {
-                elevatorRepository.sendMessage(message)
-                Log.d("WebSocket iiii", "Sent robot in cabin message: $message")
-            } catch (e: Exception) {
-                Log.e("WebSocket iiii", "Error sending robot in cabin message: ${e.message}")
-            }
-        }
-    }
-
-    // Gửi thông báo robot đã ra khỏi cabin
-    fun sendRobotExitCabinMessage(taskId: Int) {
-        val message = JSONObject().apply {
-            put("event", "robot-went-out-cabin")
-            put("data", JSONObject().apply {
-                put("msg_id", "robot-went-out-cabin_$taskId")
-                put("task_id", taskId)
-            })
-        }.toString()
-
-        viewModelScope.launch {
-            try {
-                elevatorRepository.sendMessage(message)
-                Log.d("WebSocket iiiii", "Sent robot exit cabin message: $message")
-            } catch (e: Exception) {
-                Log.e("WebSocket iiiii", "Error sending robot exit cabin message: ${e.message}")
-            }
-        }
-    }
-
-    // Xử lý sau khi đến điểm chờ thang máy
-    private fun waitForElevatorPointAndProceed() {
-        viewModelScope.launch {
-            _isElevatorPointReached.collect { isReached ->
-                if (isReached) {
-                    _robotState.value = RobotState.MOVING_TO_CABIN
-//                    delay(5000)
-                    navigateToPositionUseCase.setSpeed(0.3f)
-                    when (_currentJourney.value) {
-                        JourneyDirection.START_TO_WORK -> navigateToCabin()
-                        JourneyDirection.GO_HOME -> navigateToCabin()
-                        JourneyDirection.NONE -> Log.e(
-                            "Navigation",
-                            "No journey direction specified"
-                        )
-                    }
-                    _isElevatorPointReached.value = false
-                }
-            }
-        }
-    }
-
-    // Di chuyển đến điểm chờ thang máy tầng 13
-    private fun navigateToElevatorPoint() {
-//        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
-
-        viewModelScope.launch {
-            try {
-                _isElevatorPointReached.value = false
-//                val result = navigateToPositionUseCase(position)
-                val result = navigateToDestinationUseCase(positionOutSide)
-                _navigationResult.value = result
-
-                if (result == true) {
-                    _isElevatorPointReached.value = true
-                    Log.d("NavigationViewModel", "Reached floor 13 elevator point")
-                }
-            } catch (e: Exception) {
-                Log.e("NavigationViewModel", "Error navigating to elevator point: ${e.message}")
-            }
-        }
-    }
-
-    // Di chuyển vào cabin từ tầng 13
-    private fun navigateToCabin() {
-//        val position = "x= -0.21469636f, y=0.006519f, z=0.0f, rotation=-0.19207564f"
-
-        viewModelScope.launch {
-            try {
-//                val result = navigateToPosition2UseCase(position)
-                val result = navigateToDestinationUseCase(positionInSide)
-                _navigationResult.value = result
-
-                if (result == true) {
-                    val currentTaskId = _taskId.value
-                    Log.e("iiiii", _taskId.value.toString())
-                    if (currentTaskId != null) {
-                        Log.e("iiiiii", _taskId.value.toString())
-                        sendRobotInCabinMessage(currentTaskId)
-                        _robotState.value = RobotState.INSIDE_CABIN
-//                        loadMapByName("1-2")
+                    val result = navigateToDestinationUseCase(position)
+                    if (result) {
+                        sendTaskStepConfirmed(confirmationCode)
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("NavigationViewModel", "Error navigating to cabin: ${e.message}")
-            }
-        }
-    }
-
-    // Di chuyển ra khỏi cabin ở tầng 1
-    private fun navigateToExitCabin() {
-        val position = "x= 2.6824255f, y=-0.2290653f, z=0.0f, rotation=-0.2657993f"
-
-        viewModelScope.launch {
-            try {
-//                val result = navigateToPositionUseCase(position)
-                val result = navigateToDestinationUseCase(positionOutSide)
-                _navigationResult.value = result
-
-                if (result == true) {
-                    val currentTaskId = _taskId.value
-                    if (currentTaskId != null) {
-                        sendRobotExitCabinMessage(currentTaskId)
-                        _robotState.value = RobotState.IDLE
-                        navigateToPositionUseCase.setSpeed(0.8f)
-                        if (_currentJourney.value == JourneyDirection.GO_HOME) {
-                            goHome()
-                            Log.d("NavigationViewModel", "Robot is going home after exiting cabin at floor 13")
-                        }
-//                        elevatorRepository.disconnect()
-//                        _taskId.value = null
-                    }
+                "DeliveryNotification" -> {
+                    Log.d("ElevatorViewModel", "Waiting for user to confirm delivery")
+                    _isDeliveryConfirmed.value = false
                 }
-            } catch (e: Exception) {
-                Log.e("NavigationViewModel", "Error navigating to exit cabin: ${e.message}")
+                "CallLift" -> {
+                    Log.d("ElevatorViewModel", "Calling elevator")
+                    delay(5000)
+                    sendTaskStepConfirmed(confirmationCode)
+                }
+                "SelectFloor" -> {
+                    Log.d("ElevatorViewModel", "Selecting floor")
+                    delay(5000)
+                    sendTaskStepConfirmed(confirmationCode)
+                }
+                "ExitLift" -> {
+                    Log.d("ElevatorViewModel", "Exiting lift")
+                    delay(5000)
+                    sendTaskStepConfirmed(confirmationCode)
+                }
+                "GoHome" -> {
+
+                }
             }
         }
     }
 
-    // Load map theo tên
-    fun loadMapByName(name: String) {
-        viewModelScope.launch {
-            try {
-                mapUseCase.loadMapByName(name)
-                Log.d("NavigationViewModel", "Map loaded: $name")
-            } catch (e: Exception) {
-                Log.e("NavigationViewModel", "Error loading map: ${e.message}")
-            }
-        }
-    }
 
-    fun cancelAllTasks() {
+
+    private fun sendTaskStepConfirmed(confirmationCode: String) {
         val message = JSONObject().apply {
-            put("event", "cancel-all-task")
+            put("event", "task_step_confirmed")
+            put("data", confirmationCode)
+        }.toString()
+
+        elevatorRepository.sendMessage(message)
+    }
+
+    private fun sendStageFinished() {
+        if (stageId == null) return
+
+        val message = JSONObject().apply {
+            put("event", "stage_finished")
             put("data", JSONObject().apply {
-                put("serial_number", "SN01") // Thay SN01 bằng serial number thực tế nếu cần
+                put("stage_id", stageId)
+                put("status", 3)
             })
         }.toString()
 
-        viewModelScope.launch {
-            try {
-                elevatorRepository.sendMessage(message)
-                Log.d("WebSocket iiii", "Sent cancel all tasks message: $message")
-            } catch (e: Exception) {
-                Log.e("WebSocket iiii", "Error sending cancel all tasks message: ${e.message}")
-            }
-        }
+        elevatorRepository.sendMessage(message)
     }
 
-    fun goHome(){
-        viewModelScope.launch {
-            moveDirection.goHome()
+    private fun loadMapForDestinationFloor(step: JSONObject) {
+        val destinationFloor = step.getInt("destination_floor")
+        val mapName = when (destinationFloor) {
+            1 -> "1-2"
+            13 -> "12A-2"
+            else -> return
         }
+        Log.d("ElevatorViewModel", "Loading map: $mapName")
+    }
+
+    fun requestRoute(destinations: List<Int>) {
+        val message = JSONObject().apply {
+            put("event", "route_analyze")
+            put("data", JSONArray(destinations))
+        }.toString()
+
+        elevatorRepository.sendMessage(message)
+    }
+
+
+    fun disconnectWebSocket() {
+        elevatorRepository.disconnect()
+    }
+
+    private var nextReplaceIndex = 0
+    fun selectPoint(pointName: String, pointId: Int) {
+
+        val newPoints = _selectedPoints.value.toMutableList()
+
+        if (newPoints.size < 2) {
+            newPoints.add(pointName to pointId)
+        } else {
+            newPoints[nextReplaceIndex] = pointName to pointId
+            nextReplaceIndex = (nextReplaceIndex + 1) % 2
+        }
+
+        _selectedPoints.value = newPoints
+        Log.d("Elevator", "Selected points: ${_selectedPoints.value}")
+    }
+
+
+    fun getSelectedPointId(): Int? {
+        return selectedPointId
     }
 
     fun selectDoor(door1: Boolean, door2: Boolean) {
-        _selectedDoors.value = Pair(door1, door2)
+        _selectedDoors.value = listOf(door1, door2)
     }
 
     fun openSelectedDoors() {
@@ -435,6 +339,13 @@ class ElevatorViewModel @Inject constructor(
     }
 
     fun closeDoorsAndMoveUp() {
+        if (currentStepIndex >= navigationSteps.size) return
+
+        val step = navigationSteps[currentStepIndex]
+        val action = step.getString("action")
+        val confirmationCode = step.getString("confirmation_code")
+
+        Log.d("ElevatorViewModel", "Executing action: $action")
         val (door1, door2) = _selectedDoors.value
 
         viewModelScope.launch {
@@ -443,9 +354,12 @@ class ElevatorViewModel @Inject constructor(
 
             delay(2000)
 
-            callElevatorUp()
+            sendTaskStepConfirmed(confirmationCode)
         }
+    }
+    fun confirmDelivery() {
+        _isDeliveryConfirmed.value = true
+        openSelectedDoors()
     }
 
 }
-

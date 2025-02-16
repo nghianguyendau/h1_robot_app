@@ -9,12 +9,14 @@ import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationViewModel
 import com.phenikaa.h1_robot_app.state.RobotState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,6 +26,7 @@ import javax.inject.Inject
 class ElevatorGoHomeViewModel @Inject constructor(
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val elevatorRepository: ElevatorRepository,
+    private val doorControlUseCase: RobotDoorUseCase
 
     ) : ViewModel() {
 
@@ -57,10 +60,16 @@ class ElevatorGoHomeViewModel @Inject constructor(
 
     private var selectedPointId: Int? = null
 
+    private val _selectedDoors = MutableStateFlow<Pair<Boolean, Boolean>>(false to false)
+    val selectedDoors: StateFlow<Pair<Boolean, Boolean>> = _selectedDoors.asStateFlow()
+
+    private var _routeAnalyzeData: JSONObject? = null
+
+
 
     init {
-        connectWebSocket()
-        listenToWebSocket()
+//        connectWebSocket()
+//        listenToWebSocket()
     }
 
     fun loadPoints(page: Int = 1) {
@@ -95,30 +104,32 @@ class ElevatorGoHomeViewModel @Inject constructor(
     }
 
     private fun handleWebSocketMessage(message: String) {
-        Log.e("ddd", "iiiiiii")
-        val jsonObject = JSONObject(message)
-        when (jsonObject.getString("event")) {
-            "route_analyze" -> handleRouteAnalyze(jsonObject)
-            "task_step_confirmed" -> handleTaskStepConfirmed(jsonObject)
-        }
+//        Log.e("ddd", "iiiiiii")
+//        val jsonObject = JSONObject(message)
+//        when (jsonObject.getString("event")) {
+//            "route_analyze" -> handleRouteAnalyze(jsonObject)
+//            "task_step_confirmed" -> handleTaskStepConfirmed(jsonObject)
+//            "stage_finished" -> handleStageFinished(jsonObject)
+//        }
     }
 
     private fun handleRouteAnalyze(json: JSONObject) {
-        Log.e("dddddd", "eeeeeeee")
+        Log.e("ElevatorViewModel", "Processing route_analyze")
+
         if (json.getString("status") == "success") {
+            _routeAnalyzeData = json // Lưu lại toàn bộ dữ liệu của message
+
             val data = json.getJSONObject("data")
             taskId = data.getInt("task_id")
             val stages = data.getJSONArray("data")
-            if (stages.length() > 0) {
-                val firstStage = stages.getJSONObject(0)
-                stageId = firstStage.getInt("stage_id")
-                navigationSteps = parseNavigationSteps(firstStage.getJSONArray("navigation_steps"))
 
-                Log.d("ElevatorViewModel", "Navigation Steps: $navigationSteps")
-                executeNextStep()
+            if (stages.length() > 0) {
+                startStage(stages, 0)
             }
         }
     }
+
+
 
     private fun handleTaskStepConfirmed(json: JSONObject) {
         val confirmationCode = json.getJSONObject("data").getString("confirmation_code")
@@ -132,6 +143,46 @@ class ElevatorGoHomeViewModel @Inject constructor(
             sendStageFinished()
         }
     }
+
+    private fun handleStageFinished(json: JSONObject) {
+        Log.d("ElevatorViewModel", "Stage completed, checking for next stage...")
+
+        val finishedStageId = json.getJSONObject("data").getInt("stage_id")
+
+        // Kiểm tra nếu còn stage trong route_analyze
+        val stages = _routeAnalyzeData?.getJSONObject("data")?.getJSONArray("data") ?: return
+
+        val nextStageIndex = findStageIndexById(stages, finishedStageId) + 1
+        if (nextStageIndex < stages.length()) {
+            Log.d("ElevatorViewModel", "Starting next stage...")
+
+            startStage(stages, nextStageIndex) // Chuyển sang stage tiếp theo
+        } else {
+            Log.d("ElevatorViewModel", "All stages completed.")
+        }
+    }
+
+    private fun startStage(stages: JSONArray, stageIndex: Int) {
+        val stage = stages.getJSONObject(stageIndex)
+        stageId = stage.getInt("stage_id")
+        navigationSteps = parseNavigationSteps(stage.getJSONArray("navigation_steps"))
+
+        Log.d("ElevatorViewModel", "Starting Stage $stageId with ${navigationSteps.size} steps")
+
+        currentStepIndex = 0
+        executeNextStep() // Thực hiện bước đầu tiên của stage mới
+    }
+
+    private fun findStageIndexById(stages: JSONArray, stageId: Int): Int {
+        for (i in 0 until stages.length()) {
+            if (stages.getJSONObject(i).getInt("stage_id") == stageId) {
+                return i
+            }
+        }
+        return -1
+    }
+
+
 
     private fun parseNavigationSteps(jsonArray: JSONArray): List<JSONObject> {
         return (0 until jsonArray.length()).map { index -> jsonArray.getJSONObject(index) }
@@ -160,23 +211,23 @@ class ElevatorGoHomeViewModel @Inject constructor(
                 }
                 "CallLift" -> {
                     Log.d("ElevatorViewModel", "Calling elevator")
-                    delay(5000) // Giả lập thời gian chờ thang máy đến
+                    delay(5000)
                     sendTaskStepConfirmed(confirmationCode)
                 }
                 "SelectFloor" -> {
                     Log.d("ElevatorViewModel", "Selecting floor")
-                    delay(5000) // Giả lập thời gian chờ
-                    loadMapForDestinationFloor(step)
+                    delay(5000)
                     sendTaskStepConfirmed(confirmationCode)
                 }
                 "ExitLift" -> {
                     Log.d("ElevatorViewModel", "Exiting lift")
-                    delay(5000) // Giả lập thời gian chờ robot ra khỏi cabin
+                    delay(5000)
                     sendTaskStepConfirmed(confirmationCode)
                 }
             }
         }
     }
+
 
     private fun sendTaskStepConfirmed(confirmationCode: String) {
         val message = JSONObject().apply {
@@ -227,9 +278,43 @@ class ElevatorGoHomeViewModel @Inject constructor(
     fun selectPoint(pointName: String, pointId: Int) {
         _selectedPoint.value = pointName
         selectedPointId = pointId
+        Log.d("Elevator", "Selected point: $pointName")
     }
 
     fun getSelectedPointId(): Int? {
         return selectedPointId
+    }
+
+    fun selectDoor(door1: Boolean, door2: Boolean) {
+        _selectedDoors.value = Pair(door1, door2)
+    }
+
+    fun openSelectedDoors() {
+        val (door1, door2) = _selectedDoors.value
+
+        viewModelScope.launch {
+            if (door1) doorControlUseCase.openOneFloorDoor()
+            if (door2) doorControlUseCase.openTwoFloorDoor()
+        }
+    }
+
+    fun closeDoorsAndMoveUp() {
+        if (currentStepIndex >= navigationSteps.size) return
+
+        val step = navigationSteps[currentStepIndex]
+        val action = step.getString("action")
+        val confirmationCode = step.getString("confirmation_code")
+
+        Log.d("ElevatorViewModel", "Executing action: $action")
+        val (door1, door2) = _selectedDoors.value
+
+        viewModelScope.launch {
+            if (door1) doorControlUseCase.closeOneFloorDoor()
+            if (door2) doorControlUseCase.closeTwoFloorDoor()
+
+            delay(2000)
+
+            sendTaskStepConfirmed(confirmationCode)
+        }
     }
 }
