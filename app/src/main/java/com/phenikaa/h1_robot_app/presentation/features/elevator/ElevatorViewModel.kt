@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
-import com.phenikaa.h1_robot_app.data.api.ApiPointClient
-import com.phenikaa.h1_robot_app.data.api.PointsApiService
+import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
@@ -17,7 +16,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -78,9 +76,6 @@ class ElevatorViewModel @Inject constructor(
     private val _allStagesCompleted = MutableStateFlow(false)
     val allStagesCompleted: StateFlow<Boolean> get() = _allStagesCompleted
 
-
-
-
     init {
         connectWebSocket()
         listenToWebSocket()
@@ -89,7 +84,7 @@ class ElevatorViewModel @Inject constructor(
     fun loadPoints(page: Int = 1) {
         viewModelScope.launch {
             try {
-                val response = ApiPointClient.apiService.getPoints(page, _perPage.value)
+                val response = PhenikaaMecApiClient.apiService.getPoints(page, _perPage.value)
 
                 if (response.data.points.isNotEmpty()) {
                     _points.value = response.data.points

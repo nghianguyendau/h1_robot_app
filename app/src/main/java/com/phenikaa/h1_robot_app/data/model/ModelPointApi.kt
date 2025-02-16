@@ -15,7 +15,7 @@ data class DataWrapper(
 
 data class Point(
     @SerializedName("id") val id: Int,
-    @SerializedName("floor_code") val floorCode: String,
+    @SerializedName("floor_code") val floorCode: String ?= null,
 //    @SerializedName("code") val code: String?,
     @SerializedName("name") val name: String?,
     @SerializedName("x") val x: Float,
@@ -41,7 +41,7 @@ data class Point(
 
 
 data class NewPoint(
-    @SerializedName("floor_code") val floorCode: String,
+    @SerializedName("floor_code") val floorCode: String ?= null,
     @SerializedName("name") val name: String?,
     @SerializedName("x") val x: Float,
     @SerializedName("y") val y: Float,
