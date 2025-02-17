@@ -7,7 +7,7 @@ import javax.inject.Inject
 class MakePhoneCallUseCase @Inject constructor(
     private val phoneCallRepository: PhoneCallRepository
 ) {
-    suspend operator fun invoke(phoneNumber: String) {
+     operator fun invoke(phoneNumber: String) {
         val message = PhoneCallMessage(
             event = "call",
             number = phoneNumber

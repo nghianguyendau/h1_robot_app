@@ -8,6 +8,7 @@ import com.phenikaa.h1_robot_app.domain.usecase.phonecall.DisconnectPhoneCallWeb
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.MakePhoneCallUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObserveConnectionStateUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObservePhoneCallMessagesUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.phonecall.SendLoraMessageUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,5 +62,12 @@ object PhoneCallModule {
         repository: PhoneCallRepository
     ): ObserveConnectionStateUseCase {
         return ObserveConnectionStateUseCase(repository)
+    }
+
+    @Provides
+    fun provideSendLoraMessageUseCase(
+        repository: PhoneCallRepository
+    ): SendLoraMessageUseCase {
+        return SendLoraMessageUseCase(repository)
     }
 }

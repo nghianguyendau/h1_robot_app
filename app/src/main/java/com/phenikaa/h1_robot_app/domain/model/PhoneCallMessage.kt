@@ -10,3 +10,8 @@ data class PhoneCallResponseMessage (
     var status: Int,
     var info: String
 )
+
+data class LoraMessage (
+    var event: String ?= "send-lora",
+    var message: String
+)

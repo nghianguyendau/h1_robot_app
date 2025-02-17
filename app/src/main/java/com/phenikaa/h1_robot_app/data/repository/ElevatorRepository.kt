@@ -33,7 +33,7 @@ class ElevatorRepository @Inject constructor(
     }
     fun connect() {
 //        baseWebSocketDataSource.connect("wss://robotic-elevator-api.phx.asia?type=ROBOT&serial_number=RobotSN01")
-        baseWebSocketDataSource.connect("ws://robotic-phenikaa-mec-server.phx.asia?type=ROBOT&serial_number=SN01")
+        baseWebSocketDataSource.connect("ws://38d0-2a09-bac5-d45a-16dc-00-247-128.ngrok-free.app?type=ROBOT&serial_number=SN01")
     }
 
     fun disconnect() {
