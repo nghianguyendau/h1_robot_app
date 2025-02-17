@@ -216,14 +216,12 @@ class PhenikaaMecViewModel @Inject constructor(
                     }
                 }
 
-                // Khi hoàn thành tất cả các điểm
                 _navigationState.value = NavigationState.AllPointsCompleted
                 clearSelectedPoints()
 
             } catch (e: Exception) {
-                // Xử lý exception
             } finally {
-                delay(1000) // Delay trước khi reset state
+                delay(1000)
                 _navigationState.value = NavigationState.Idle
             }
         }

@@ -71,11 +71,11 @@ fun HomeScreen(
             ) {
                 // Left large card (Delivery)
                 GradientBox(
-                    primaryColor = 0xFF0078D7,
-                    secondaryColor = 0xFF81D4FA,
-                    imageResId = R.drawable.box,
-                    title = "Giao hàng",
-                    subTitle = "Delivery",
+                    primaryColor = 0xFFffa000,
+                    secondaryColor = 0xFFffe082,
+                    imageResId = R.drawable.menu,
+                    title = "Danh sách điểm",
+                    subTitle = "List points",
                     modifier = Modifier.weight(1f),
                     heightType = BoxHeightType.FULL,
                     layoutType = BoxLayoutType.VERTICAL,
@@ -89,11 +89,11 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     GradientBox(
-                        primaryColor = 0xFFffa000,
-                        secondaryColor = 0xFFffe082,
-                        imageResId = R.drawable.map,
-                        title = "Bản đồ",
-                        subTitle = "Map",
+                        primaryColor = 0xFF0078D7,
+                        secondaryColor = 0xFF81D4FA,
+                        imageResId = R.drawable.box,
+                        title = "Giao hàng",
+                        subTitle = "Delivery",
                         heightType = BoxHeightType.HALF,
                         layoutType = BoxLayoutType.HORIZONTAL,
                         onClick = {
@@ -104,9 +104,9 @@ fun HomeScreen(
                     GradientBox(
                         primaryColor = 0xFF00c853,
                         secondaryColor = 0xFFb9f6ca,
-                        imageResId = R.drawable.comments,
-                        title = "Nhắn tin",
-                        subTitle = "Message",
+                        imageResId = R.drawable.destinations,
+                        title = "Tuần tra",
+                        subTitle = "Cruising",
                         heightType = BoxHeightType.HALF,
                         layoutType = BoxLayoutType.HORIZONTAL,
                         onClick = {
