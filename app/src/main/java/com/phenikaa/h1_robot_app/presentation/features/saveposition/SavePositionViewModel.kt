@@ -31,7 +31,7 @@ class SavePositionViewModel @Inject constructor(
     private val _currentPage = MutableStateFlow(1)
     val currentPage: StateFlow<Int> get() = _currentPage
 
-    private val _perPage = MutableStateFlow(50)
+    private val _perPage = MutableStateFlow(10)
     val perPage: StateFlow<Int> get() = _perPage
 
     private val _totalPages = MutableStateFlow(1)
@@ -69,7 +69,9 @@ class SavePositionViewModel @Inject constructor(
                 if (response.data.points.isNotEmpty()) {
                     _points.value = response.data.points
                     _currentPage.value = page
-                    _totalPages.value = maxOf((response.data.total / _perPage.value), 1)
+
+                    val totalRecords = response.data.total
+                    _totalPages.value = (totalRecords + _perPage.value - 1) / _perPage.value
                 }
 
             } catch (e: Exception) {
