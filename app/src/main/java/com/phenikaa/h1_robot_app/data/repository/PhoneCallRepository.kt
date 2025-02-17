@@ -3,6 +3,7 @@ package com.phenikaa.h1_robot_app.data.repository
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
 import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.domain.model.LoraMessage
 import com.phenikaa.h1_robot_app.domain.model.PhoneCallMessage
 import com.phenikaa.h1_robot_app.domain.model.PhoneCallResponseMessage
 import kotlinx.coroutines.flow.Flow
@@ -33,5 +34,10 @@ class PhoneCallRepository @Inject constructor(
 
     fun observeConnectionState(): Flow<ConnectionState> {
         return baseWebSocketDataSource.connectionState
+    }
+
+    fun sendLoraMessage(loraMessage: LoraMessage) {
+        val json = gson.toJson(loraMessage)
+        baseWebSocketDataSource.sendMessage(json)
     }
 }

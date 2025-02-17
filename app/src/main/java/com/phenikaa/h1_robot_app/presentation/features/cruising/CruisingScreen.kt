@@ -1,12 +1,12 @@
 package com.phenikaa.h1_robot_app.presentation.features.cruising
 
+
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -17,8 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.presentation.shared.PhenikaaMecViewModel
+import com.phenikaa.h1_robot_app.ui.components.ToastHost
+import com.phenikaa.h1_robot_app.ui.components.ToastType
+import com.phenikaa.h1_robot_app.ui.components.rememberToastHostState
 
 
 data class MapItem(
@@ -26,172 +30,201 @@ data class MapItem(
     val name: String
 )
 
-
 @Composable
 fun CruisingScreen(viewModel: PhenikaaMecViewModel = hiltViewModel()) {
-    // Mock data với nhiều điểm hơn để test
     val floors by viewModel.floors.collectAsState()
     val points by viewModel.points.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.error.collectAsState()
 
     var selectedMap by remember { mutableStateOf<MapItem?>(null) }
-    var selectedPoints by remember { mutableStateOf(setOf<Point>()) }
+    val selectedPoints by viewModel.selectedPoints.collectAsState()
+
+    val toastState = rememberToastHostState()
+    val navigationState by viewModel.navigationState.collectAsState()
+
+    val connectionState by viewModel.connectionState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getAllFloors()
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Left panel - Map list
-        Card(
-            modifier = Modifier
-                .weight(0.3f)
-                .fillMaxHeight()
-                .padding(end = 16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Danh sách bản đồ",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                } else if (floors.isEmpty()) {
-                    Text("Không có dữ liệu tầng", color = MaterialTheme.colorScheme.error)
-                } else {
-                    LazyColumn {
-                        items(floors) { floor ->
-                            MapItem(
-                                map = MapItem(floor.id.toString(), floor.name),
-                                isSelected = selectedMap?.id == floor.id.toString(),
-                                onClick = {
-                                    selectedMap = MapItem(floor.id.toString(), floor.name)
-                                    selectedPoints = emptySet() // Reset điểm đã chọn
-                                    viewModel.getPointsByFloorId(floor.id) // Gọi API lấy danh sách điểm
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
+    LaunchedEffect(navigationState) {
+        when (val state = navigationState) {
+            is PhenikaaMecViewModel.NavigationState.PointCompleted -> {
+                toastState.showToast("Đã di chuyển đến ${state.pointName}", ToastType.SUCCESS)
+            }
 
-                    }
-                }
+            is PhenikaaMecViewModel.NavigationState.AllPointsCompleted -> {
+                toastState.showToast("Đã hoàn thành tất cả các điểm!", ToastType.SUCCESS)
+            }
+
+            else -> {
+
             }
         }
+    }
 
-        // Right panel - Points and controls
-        Card(
+    LaunchedEffect(connectionState) {
+        if (connectionState == ConnectionState.DISCONNECTED) {
+            Log.d("PhoneCallScreen", "Reconnecting WebSocket")
+            viewModel.connectWebsocket("ws://192.168.99.176:8080")
+        }
+    }
+
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            viewModel.disconnectWebsocket()
+//        }
+//    }
+
+    ToastHost(hostState = toastState) {
+        Row(
             modifier = Modifier
-                .weight(0.7f)
-                .fillMaxHeight()
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Column(
+            // Left panel - Map list
+            Card(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxSize()
+                    .weight(0.3f)
+                    .fillMaxHeight()
+                    .padding(end = 16.dp)
             ) {
-                // Selected map info
-                selectedMap?.let {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
                     Text(
-                        text = "Bản đồ: ${it.name}",
+                        text = "Danh sách bản đồ",
                         style = MaterialTheme.typography.headlineSmall
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else if (floors.isEmpty()) {
+                        Text("Không có dữ liệu tầng", color = MaterialTheme.colorScheme.error)
+                    } else {
+                        LazyColumn {
+                            items(floors) { floor ->
+                                MapItem(
+                                    map = MapItem(floor.id.toString(), floor.name),
+                                    isSelected = selectedMap?.id == floor.id.toString(),
+                                    onClick = {
+                                        selectedMap = MapItem(floor.id.toString(), floor.name)
+                                        viewModel.clearSelectedPoints() // Thay vì set empty trực tiếp
+                                        viewModel.getPointsByFloorId(floor.id)
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                        }
+                    }
                 }
+            }
 
-                // Points grid
-                if (selectedMap != null) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                    ) {
-                        // Points selection
-                        Column(
+            // Right panel - Points and controls
+            Card(
+                modifier = Modifier
+                    .weight(0.7f)
+                    .fillMaxHeight()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxSize()
+                ) {
+                    // Selected map info
+                    selectedMap?.let {
+                        Text(
+                            text = "Bản đồ: ${it.name}",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    // Points grid
+                    if (selectedMap != null) {
+                        Row(
                             modifier = Modifier
-                                .weight(0.7f)
-                                .padding(end = 16.dp)
+                                .weight(1f)
                         ) {
-                            Text(
-                                text = "Chọn điểm đến:",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            LazyVerticalGrid(
-                                columns = GridCells.Adaptive(minSize = 150.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize()
+                            // Points selection
+                            Column(
+                                modifier = Modifier
+                                    .weight(0.7f)
+                                    .padding(end = 16.dp)
                             ) {
-                                items(points) { point ->
-                                    PointItem(
-                                        point = point,
-                                        isSelected = point in selectedPoints,
-                                        onClick = {
-                                            selectedPoints = if (point in selectedPoints) {
-                                                selectedPoints - point
-                                            } else {
-                                                selectedPoints + point
+                                Text(
+                                    text = "Chọn điểm đến:",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                LazyVerticalGrid(
+                                    columns = GridCells.Adaptive(minSize = 150.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(points) { point ->
+                                        PointItem(
+                                            point = point,
+                                            isSelected = point in selectedPoints,
+                                            onClick = {
+                                                viewModel.togglePointSelection(point)
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        // Selected points list
-                        if (selectedPoints.isNotEmpty()) {
-                            Card(
-                                modifier = Modifier
-                                    .weight(0.3f)
-                                    .fillMaxHeight()
-                            ) {
-                                Column(
+                            // Selected points list
+                            if (selectedPoints.isNotEmpty()) {
+                                Card(
                                     modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxSize()
+                                        .weight(0.3f)
+                                        .fillMaxHeight()
                                 ) {
-                                    Text(
-                                        text = "Điểm đã chọn (${selectedPoints.size}):",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    LazyColumn(
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxSize()
                                     ) {
-                                        items(selectedPoints.toList()) { point ->
-                                            ElevatedFilterChip(
-                                                selected = true,
-                                                onClick = {
-                                                    selectedPoints = selectedPoints - point
-                                                },
-                                                label = { point.name?.let { Text(it) } },
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
+                                        Text(
+                                            text = "Điểm đã chọn (${selectedPoints.size}):",
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        LazyColumn(
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            items(selectedPoints.toList()) { point ->
+                                                ElevatedFilterChip(
+                                                    selected = true,
+                                                    onClick = {
+                                                        viewModel.togglePointSelection(point) // Sử dụng function từ ViewModel
+                                                    },
+                                                    label = { point.name?.let { Text(it) } },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    // Start button
-                    Button(
-                        onClick = { /* TODO: Implement start navigation */ },
-                        modifier = Modifier.align(Alignment.End),
-                        enabled = selectedPoints.isNotEmpty()
-                    ) {
-                        Text("Bắt đầu di chuyển")
+                        // Start button
+                        Button(
+                            onClick = { viewModel.navigateMultiplePoints() },
+                            modifier = Modifier.align(Alignment.End),
+                            enabled = selectedPoints.isNotEmpty()
+                        ) {
+                            Text("Bắt đầu di chuyển")
+                        }
                     }
                 }
             }

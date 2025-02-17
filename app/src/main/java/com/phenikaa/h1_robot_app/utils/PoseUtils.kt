@@ -4,57 +4,31 @@ import com.phenikaa.h1_robot_app.data.model.Point
 import org.json.JSONObject
 
 object NavigationUtils {
-    data class NavigationPoint(
-        val x: Double,
-        val y: Double,
-        val z: Double = 0.0,
-        val rotation: Double
-    )
-
     /**
-     * Chuyển đổi từ một Point sang chuỗi JSON navigation
+     * Chuyển đổi từ Point sang string JSON navigation với format chuẩn
      */
     fun Point.toNavigationString(): String {
-        return createNavigationString(
-            x = x.toDouble(),
-            y = y.toDouble(),
-            z = z?.toDouble() ?: 0.0,
-            rotation = rotation.toDouble()
-        )
+        return """{"x": $x, "y": $y, "z": "0.0", "rotation": $rotation}"""
     }
 
     /**
-     * Chuyển đổi từ JSONObject pose sang chuỗi JSON navigation
-     */
-    fun JSONObject.toNavigationString(): String {
-        return createNavigationString(
-            x = getDouble("x"),
-            y = getDouble("y"),
-            z = optDouble("z", 0.0),
-            rotation = getDouble("rotation")
-        )
-    }
-
-    /**
-     * Chuyển đổi nhiều Points sang list chuỗi JSON navigation
+     * Chuyển đổi List<Point> sang List<String> JSON
      */
     fun List<Point>.toNavigationStrings(): List<String> {
         return map { it.toNavigationString() }
     }
 
+    /**
+     * Chuyển đổi Set<Point> sang List<String> JSON
+     */
     fun Set<Point>.toNavigationStrings(): List<String> {
         return toList().toNavigationStrings()
     }
 
     /**
-     * Hàm helper để tạo chuỗi JSON navigation
+     * Chuyển đổi từ JSONObject pose sang string navigation
      */
-    private fun createNavigationString(
-        x: Double,
-        y: Double,
-        z: Double,
-        rotation: Double
-    ): String {
-        return """{"x": $x, "y": $y, "z": "$z", "rotation": $rotation}"""
+    fun JSONObject.toNavigationString(): String {
+        return """{"x": ${getDouble("x")}, "y": ${getDouble("y")}, "z": "0.0", "rotation": ${getDouble("rotation")}}"""
     }
 }

@@ -31,7 +31,7 @@ class SavePositionViewModel @Inject constructor(
     private val _currentPage = MutableStateFlow(1)
     val currentPage: StateFlow<Int> get() = _currentPage
 
-    private val _perPage = MutableStateFlow(10)
+    private val _perPage = MutableStateFlow(50)
     val perPage: StateFlow<Int> get() = _perPage
 
     private val _totalPages = MutableStateFlow(1)

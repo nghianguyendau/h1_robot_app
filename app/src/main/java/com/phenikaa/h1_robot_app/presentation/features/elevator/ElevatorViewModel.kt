@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
+import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationViewModel
@@ -25,9 +26,11 @@ import javax.inject.Inject
 class ElevatorViewModel @Inject constructor(
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val elevatorRepository: ElevatorRepository,
-    private val doorControlUseCase: RobotDoorUseCase
+    private val doorControlUseCase: RobotDoorUseCase,
+    private val moveDirection: MoveDirectionUseCase,
 
-) : ViewModel() {
+
+    ) : ViewModel() {
 
     private val _points = MutableStateFlow<List<Point>>(emptyList())
     val points: StateFlow<List<Point>> get() = _points
@@ -244,7 +247,16 @@ class ElevatorViewModel @Inject constructor(
                     sendTaskStepConfirmed(confirmationCode)
                 }
                 "GoHome" -> {
+                    val pose = step.getJSONObject("pose")
+                    val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
+                    Log.d("ElevatorViewModel", "Moving to target: $position")
 
+                    val result = navigateToDestinationUseCase(position)
+                    if (result) {
+                        sendTaskStepConfirmed(confirmationCode)
+                        sendStageFinished()
+                        goHome()
+                    }
                 }
             }
         }
@@ -268,7 +280,7 @@ class ElevatorViewModel @Inject constructor(
             put("event", "stage_finished")
             put("data", JSONObject().apply {
                 put("stage_id", stageId)
-                put("status", 3)
+                put("status", 2)
             })
         }.toString()
 
@@ -290,6 +302,8 @@ class ElevatorViewModel @Inject constructor(
             put("event", "route_analyze")
             put("data", JSONArray(destinations))
         }.toString()
+
+        Log.e("ElevatorViewModel", "Sending route_analyze message: $message")
 
         elevatorRepository.sendMessage(message)
     }
@@ -355,6 +369,12 @@ class ElevatorViewModel @Inject constructor(
     fun confirmDelivery() {
         _isDeliveryConfirmed.value = true
         openSelectedDoors()
+    }
+
+    fun goHome(){
+        viewModelScope.launch {
+            moveDirection.goHome()
+        }
     }
 
 }
