@@ -8,7 +8,9 @@ import com.phenikaa.h1_robot_app.data.model.DataFloors
 import com.phenikaa.h1_robot_app.data.model.NewPoint
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.domain.usecase.floor.GetAllFloorsUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ConnectPhoneCallWebSocketUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.DisconnectPhoneCallWebSocketUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObserveConnectionStateUseCase
@@ -37,6 +39,8 @@ class PhenikaaMecViewModel @Inject constructor(
     private val deletePointUseCase: DeletePointUseCase,
     private val getAllFloorsUseCase: GetAllFloorsUseCase,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
+    private val navigateToPositionUseCase: NavigateToPositionUseCase,
+    private val moveDirection: MoveDirectionUseCase,
     private val connectUseCase: ConnectPhoneCallWebSocketUseCase,
     private val disconnectUseCase: DisconnectPhoneCallWebSocketUseCase,
     private val sendLoraMessageUseCase: SendLoraMessageUseCase,
@@ -224,6 +228,18 @@ class PhenikaaMecViewModel @Inject constructor(
                 delay(1000)
                 _navigationState.value = NavigationState.Idle
             }
+        }
+    }
+
+    fun cancelNavi(){
+        viewModelScope.launch {
+            navigateToPositionUseCase.cancelNavi()
+        }
+    }
+
+    fun goHome(){
+        viewModelScope.launch {
+            moveDirection.goHome()
         }
     }
 

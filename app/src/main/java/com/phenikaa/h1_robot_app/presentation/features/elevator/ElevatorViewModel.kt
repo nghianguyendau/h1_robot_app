@@ -254,9 +254,10 @@ class ElevatorViewModel @Inject constructor(
                     val result = navigateToDestinationUseCase(position)
                     if (result) {
                         sendTaskStepConfirmed(confirmationCode)
-                        sendStageFinished()
-                        goHome()
+//                        sendStageFinished()
+
                     }
+                    goHome()
                 }
             }
         }

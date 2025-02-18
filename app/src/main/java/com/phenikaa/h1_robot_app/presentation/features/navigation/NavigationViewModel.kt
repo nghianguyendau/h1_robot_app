@@ -54,6 +54,7 @@ class NavigationViewModel @Inject constructor(
     val mapListError: StateFlow<String?> get() = _mapListError
 
     private val _selectedMap = MutableStateFlow<String?>(null)
+    val selectedMap: StateFlow<String?> get() = _selectedMap
     val selectedFloors: StateFlow<String?> get() = _selectedMap
 
     fun getCurrentPosition() {

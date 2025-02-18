@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -116,41 +117,6 @@ fun SavePositionScreen(viewModel: SavePositionViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun PointItem(point: Point, viewModel: SavePositionViewModel = hiltViewModel()) {
-    var showEditDialog by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-//            Text(text = "ID: ${point.id}", fontWeight = FontWeight.Bold)
-            Text(text = "Tên: ${point.name ?: "UnKnown"}")
-            Text(text = "X: ${point.x}, Y: ${point.y}, Z: ${point.z ?: "N/A"}")
-            Text(text = "Rotation: ${point.rotation}")
-            Text(text = "${point.floor?.name ?: "Không xác định"}")
-            Text(text = "Type: ${point.getTypeLabel()}")
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(onClick = { showEditDialog = true }) {
-                    Text("Sửa")
-                }
-                Button(onClick = { viewModel.deletePoint(point.id) }) {
-                    Text("Xóa")
-                }
-            }
-            if (showEditDialog) {
-                EditPointDialog(point, viewModel) { showEditDialog = false }
-            }
-        }
-    }
-}
-
-@Composable
 fun TableHeader() {
     Row(
         modifier = Modifier
@@ -159,10 +125,10 @@ fun TableHeader() {
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        TableCell("ID", weight = 0.2f, isHeader = true)
-        TableCell("Tên", weight = 0.4f, isHeader = true)
-        TableCell("Tầng", weight = 0.2f, isHeader = true)
-        TableCell("Hành động", weight = 0.3f, isHeader = true)
+        TableCell("ID", isHeader = true, modifier = Modifier.weight(1f))
+        TableCell("Tên", isHeader = true, modifier = Modifier.weight(2f))
+        TableCell("Tầng", isHeader = true, modifier = Modifier.weight(1f))
+        TableCell("Hành động", isHeader = true, modifier = Modifier.weight(1.5f))
     }
 }
 
@@ -177,13 +143,13 @@ fun TableRow(point: Point, viewModel: SavePositionViewModel) {
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        TableCell(point.id.toString(), weight = 0.2f)
-        TableCell(point.name ?: "Không có", weight = 0.4f)
-        TableCell(point.floor?.name ?: "N/A", weight = 0.2f)
+        TableCell(point.id.toString(), modifier = Modifier.weight(1f))
+        TableCell(point.name ?: "Không có", modifier = Modifier.weight(2f))
+        TableCell(point.floor?.name ?: "N/A", modifier = Modifier.weight(1f))
 
         Row(
-//            modifier = Modifier.weight(0.3f),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier.weight(1.5f),
+            horizontalArrangement = Arrangement.Center
         ) {
             IconButton(onClick = { showEditDialog = true }) {
                 Icon(Icons.Default.Edit, contentDescription = "Sửa", tint = Color.Blue)
@@ -199,14 +165,20 @@ fun TableRow(point: Point, viewModel: SavePositionViewModel) {
     }
 }
 @Composable
-fun TableCell(text: String, weight: Float, isHeader: Boolean = false) {
-    Text(
-        text = text,
-        fontWeight = if (isHeader) FontWeight.Bold else FontWeight.Normal,
-        modifier = Modifier
+fun TableCell(text: String, isHeader: Boolean = false, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
             .padding(8.dp),
-        textAlign = TextAlign.Center
-    )
+//            .fillMaxHeight(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            fontWeight = if (isHeader) FontWeight.Bold else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            fontSize = 14.sp
+        )
+    }
 }
 
 @Composable

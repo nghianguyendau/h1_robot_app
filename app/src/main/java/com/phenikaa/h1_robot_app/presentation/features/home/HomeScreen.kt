@@ -5,6 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,26 +42,41 @@ fun HomeScreen(
             horizontalAlignment = Alignment.Start
         ) {
             // Header section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
-            ) {
-                LottieAnimation()
-                Column {
-                    Text(
-                        text = "Hello,",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 48.sp,
-                        color = Color(0xFF5CAFFF)
-                    )
-                    Text(
-                        text = "I'm Robot H1",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 48.sp,
-                        color = Color(0xFF333333)
+            ){
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LottieAnimation()
+                    Column {
+                        Text(
+                            text = "Hello,",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 48.sp,
+                            color = Color(0xFF5CAFFF)
+                        )
+                        Text(
+                            text = "I'm Robot H1",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 48.sp,
+                            color = Color(0xFF333333)
+                        )
+                    }
+                }
+                IconButton(onClick = { navController.navigate("navigation") }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Cài đặt",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -66,7 +85,9 @@ fun HomeScreen(
 
             // Cards section with new layout
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Left large card (Delivery)

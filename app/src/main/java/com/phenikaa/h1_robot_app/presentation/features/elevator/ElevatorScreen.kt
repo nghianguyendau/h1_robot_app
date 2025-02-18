@@ -153,7 +153,7 @@ fun RobotElevatorScreen(
                     if (currentAction == "DeliveryNotification" && !isDeliveryConfirmed) {
                         Button(
                             onClick = {
-                                robotElevatorViewModel.openSelectedDoors()
+//                                robotElevatorViewModel.openSelectedDoors()
                                 robotElevatorViewModel.confirmDelivery()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
