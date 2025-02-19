@@ -29,11 +29,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
@@ -217,9 +220,7 @@ class NavigationViewModel @Inject constructor(
             startTime = System.currentTimeMillis()
 
             // Lấy phần trăm pin ban đầu
-            fetchBatteryLevel { battery ->
-                startBattery = battery
-            }
+            val startBattery = fetchBatteryLevelSync()
 
             // Lưu điểm đã đi
             _visitedPoints.add(position.poseName ?: "Unknown Point")
@@ -232,21 +233,19 @@ class NavigationViewModel @Inject constructor(
                 // Lấy thời gian kết thúc
                 val endTime = System.currentTimeMillis()
 
-                // Lấy phần trăm pin khi đến nơi, rồi mới ghi log
-                fetchBatteryLevel { battery ->
-                    endBattery = battery
+                // Lấy phần trăm pin khi đến nơi (chờ lấy xong)
+                val endBattery = fetchBatteryLevelSync()
 
-                    // Ghi log vào file sau khi có pin kết thúc
-                    val logText = """
-                            Robot bắt đầu di chuyển lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(startTime))}
-                            Robot đến nơi lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(endTime))}
-                            Điểm đã đi qua: ${_visitedPoints.joinToString(", ")}
-                            Pin bắt đầu: $startBattery%
-                            Pin kết thúc: $endBattery%
-                        """.trimIndent()
+                // Ghi log (CHỈ MỘT LẦN)
+                val logText = """
+                Robot bắt đầu di chuyển lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(startTime))}
+                Robot đến nơi lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(endTime))}
+                Điểm đã đi qua: ${_visitedPoints.joinToString(", ")}
+                Pin bắt đầu: $startBattery%
+                Pin kết thúc: $endBattery%
+            """.trimIndent()
 
-                    logToFile(logText)
-                }
+                logToFile(logText)
             }
         }
     }
@@ -471,15 +470,24 @@ class NavigationViewModel @Inject constructor(
         }
     }
 
-    fun fetchBatteryLevel(callback: (Int) -> Unit) {
-        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
-            override fun getBattery(battery: Int) {
-                callback(battery) // Trả về giá trị pin hiện tại
-            }
+    private suspend fun fetchBatteryLevelSync(): Int {
+        return suspendCoroutine { continuation ->
+            var isResumed = false // Cờ để đảm bảo chỉ gọi resume() một lần
 
-            override fun getCharge(charge: Int) {}
-        })
+            CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+                override fun getBattery(battery: Int) {
+                    if (!isResumed) {
+                        isResumed = true
+                        continuation.resume(battery)
+                    }
+                }
+
+                override fun getCharge(charge: Int) {
+                }
+            })
+        }
     }
+
 
     fun logToFile(logText: String) {
         viewModelScope.launch {

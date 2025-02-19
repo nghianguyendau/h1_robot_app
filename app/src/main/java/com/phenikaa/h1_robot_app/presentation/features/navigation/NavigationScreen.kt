@@ -2,7 +2,9 @@ package com.phenikaa.h1_robot_app.presentation.features.navigation
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -368,7 +370,7 @@ fun NavigationScreen(
                     Column {
                         // Nút mở file log
                         Button(onClick = {
-                            logFilePath?.let { openFile(it, context) }
+                            logFilePath?.let { openLogFile(context) }
                         }) {
                             Text("Xem log di chuyển")
                         }
@@ -495,12 +497,20 @@ private fun DirectionButton(
 }
 
 // Hàm mở file log
-fun openFile(filePath: String, context: Context) {
-    val intent = Intent(Intent.ACTION_VIEW)
-    val file = File(filePath)
-    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+fun openLogFile(context: Context) {
+    val logFile = File(context.filesDir, "robot_movement_log.txt")
 
-    intent.setDataAndType(uri, "text/plain")
-    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-    context.startActivity(intent)
+    if (!logFile.exists()) {
+        Toast.makeText(context, "Log file không tồn tại!", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val uri: Uri = FileProvider.getUriForFile(context, "com.phenikaa.h1_robot_app.provider", logFile)
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "text/plain")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    context.startActivity(Intent.createChooser(intent, "Open log file"))
 }
