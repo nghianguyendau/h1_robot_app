@@ -12,7 +12,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.phenikaa.h1_robot_app.R
+import com.phenikaa.h1_robot_app.presentation.shared.BatteryViewModel
 import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -26,6 +28,8 @@ fun CustomTopAppBar(
     showBack: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
+    val batteryViewModel: BatteryViewModel = hiltViewModel()
+    val batteryPercentage by batteryViewModel.batteryLevel.collectAsState()
     Column(modifier = modifier) {
         // Original Top App Bar
         Surface(

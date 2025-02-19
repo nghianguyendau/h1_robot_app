@@ -39,7 +39,7 @@ interface PhenikaaMecApiService {
 }
 
 object PhenikaaMecApiClient {
-    private const val BASE_URL = "https://5963-2a09-bac1-7aa0-50-00-247-123.ngrok-free.app/"
+    private const val BASE_URL = "https://robotic-phenikaa-mec-server.phx.asia/"
 
     val apiService: PhenikaaMecApiService by lazy {
         Retrofit.Builder()

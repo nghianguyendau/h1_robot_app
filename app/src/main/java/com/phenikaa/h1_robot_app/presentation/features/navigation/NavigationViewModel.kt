@@ -1,10 +1,14 @@
 package com.phenikaa.h1_robot_app.presentation.features.navigation
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.listener.OnMapListListener
 import com.csjbot.coshandler.listener.OnMapListener
+import com.csjbot.coshandler.listener.OnRobotStateListener
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.Position
@@ -15,27 +19,36 @@ import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPosition2UseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
+    application: Application,
     private val getCurrentPositionUseCase: GetCurrentPositionUseCase,
     private val navigateToPositionUseCase: NavigateToPositionUseCase,
     private val navigateToPosition2UseCase: NavigateToPosition2UseCase,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val moveDirection: MoveDirectionUseCase,
     private val naviDataSource: RobotNaviDataSource,
-    private val mapUseCase: MapUseCase
+    private val mapUseCase: MapUseCase,
+    private val doorControlUseCase: RobotDoorUseCase
 
-) : ViewModel() {
+
+) : AndroidViewModel(application) {
     private var movementJob: Job? = null
 
     private val _navigationState = MutableStateFlow<NavigationState>(NavigationState.Idle)
@@ -56,6 +69,17 @@ class NavigationViewModel @Inject constructor(
     private val _selectedMap = MutableStateFlow<String?>(null)
     val selectedMap: StateFlow<String?> get() = _selectedMap
     val selectedFloors: StateFlow<String?> get() = _selectedMap
+
+    private val _doorState = MutableStateFlow<Pair<Int, Int>?>(null)
+    val doorState: StateFlow<Pair<Int, Int>?> = _doorState.asStateFlow()
+
+    private val _logFilePath = MutableStateFlow<String?>(null)
+    val logFilePath: StateFlow<String?> = _logFilePath.asStateFlow()
+    private val _visitedPoints = mutableListOf<String>()
+    private var startTime: Long = 0
+    private var startBattery: Int = 100 // Mặc định
+    private var endBattery: Int = 100 // Mặc định
+
 
     fun getCurrentPosition() {
         Log.d("NavigationViewModel", "getCurrentPosition called")
@@ -189,11 +213,44 @@ class NavigationViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            // Lấy thời gian bắt đầu
+            startTime = System.currentTimeMillis()
+
+            // Lấy phần trăm pin ban đầu
+            fetchBatteryLevel { battery ->
+                startBattery = battery
+            }
+
+            // Lưu điểm đã đi
+            _visitedPoints.add(position.poseName ?: "Unknown Point")
+
+            // Thực hiện điều hướng
             val result = navigateToPositionUseCase(position)
             _navigationResult.value = result
-//            navigateToPositionUseCase.navigateToPosition(position)
+
+            if (result == true) {
+                // Lấy thời gian kết thúc
+                val endTime = System.currentTimeMillis()
+
+                // Lấy phần trăm pin khi đến nơi, rồi mới ghi log
+                fetchBatteryLevel { battery ->
+                    endBattery = battery
+
+                    // Ghi log vào file sau khi có pin kết thúc
+                    val logText = """
+                            Robot bắt đầu di chuyển lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(startTime))}
+                            Robot đến nơi lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(endTime))}
+                            Điểm đã đi qua: ${_visitedPoints.joinToString(", ")}
+                            Pin bắt đầu: $startBattery%
+                            Pin kết thúc: $endBattery%
+                        """.trimIndent()
+
+                    logToFile(logText)
+                }
+            }
         }
     }
+
 
     fun navigateToDestination(position: String) {
         viewModelScope.launch {
@@ -370,6 +427,75 @@ class NavigationViewModel @Inject constructor(
     }
 
 
+    fun openDoor() {
+        Log.d("ViewModel", "openDoor() called")
+        viewModelScope.launch {
+            doorControlUseCase.openDoor { i1, i2 ->
+                Log.d("ViewModel", "openDoor() result: state1=$i1, state2=$i2")
+                _doorState.value = Pair(i1, i2)
+            }
+            launch { openOneFloorDoor() }
+            launch { openTwoFloorDoor() }
+        }
+    }
+
+    fun closeDoor() {
+        viewModelScope.launch {
+            doorControlUseCase.closeDoor { i1, i2 -> _doorState.value = Pair(i1, i2) }
+            launch { closeOneFloorDoor() }
+            launch { closeTwoFloorDoor() }
+        }
+    }
+
+    fun openOneFloorDoor() {
+        viewModelScope.launch {
+            doorControlUseCase.openOneFloorDoor()
+        }
+    }
+
+    fun openTwoFloorDoor() {
+        viewModelScope.launch {
+            doorControlUseCase.openTwoFloorDoor()
+        }
+    }
+
+    fun closeOneFloorDoor() {
+        viewModelScope.launch {
+            doorControlUseCase.closeOneFloorDoor()
+        }
+    }
+
+    fun closeTwoFloorDoor() {
+        viewModelScope.launch {
+            doorControlUseCase.closeTwoFloorDoor()
+        }
+    }
+
+    fun fetchBatteryLevel(callback: (Int) -> Unit) {
+        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+            override fun getBattery(battery: Int) {
+                callback(battery) // Trả về giá trị pin hiện tại
+            }
+
+            override fun getCharge(charge: Int) {}
+        })
+    }
+
+    fun logToFile(logText: String) {
+        viewModelScope.launch {
+            try {
+                val logFile = File(getApplication<Application>().filesDir, "robot_movement_log.txt")
+                logFile.appendText("$logText\n")
+
+                // Lưu đường dẫn file để sử dụng sau này
+                _logFilePath.value = logFile.absolutePath
+
+                Log.d("NavigationViewModel", "Log ghi vào file: $logText")
+            } catch (e: Exception) {
+                Log.e("NavigationViewModel", "Lỗi khi ghi log: ${e.message}")
+            }
+        }
+    }
 
 
 

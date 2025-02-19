@@ -1,5 +1,7 @@
 package com.phenikaa.h1_robot_app.presentation.features.navigation
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,14 +14,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.NavigationState
 import com.phenikaa.h1_robot_app.domain.model.Position
+import java.io.File
 
 @Composable
 fun NavigationScreen(
@@ -116,6 +121,47 @@ fun NavigationScreen(
                 .verticalScroll(
                     rememberScrollState()
                 )) {
+                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DirectionButton(
+                        text = "Open Door",
+                        onClick = {
+                            viewModel.openDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close Door",
+                        onClick = {
+                            viewModel.closeDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Open First Door",
+                        onClick = {
+                            viewModel.openOneFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close First Door",
+                        onClick = {
+                            viewModel.closeOneFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Open Second Door",
+                        onClick = {
+                            viewModel.openTwoFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close Second Door",
+                        onClick = {
+                            viewModel.closeTwoFloorDoor()
+                        }
+                    )
+                }
                 Row(
 //                    modifier = Modifier.fillMaxWidth(),
 //                    horizontalArrangement = Arrangement.SpaceEvenly
@@ -316,6 +362,22 @@ fun NavigationScreen(
                             viewModel.setSpeed(0.4f)
                         }
                     )
+                    val logFilePath by viewModel.logFilePath.collectAsState()
+                    val context = LocalContext.current
+
+                    Column {
+                        // Nút mở file log
+                        Button(onClick = {
+                            logFilePath?.let { openFile(it, context) }
+                        }) {
+                            Text("Xem log di chuyển")
+                        }
+
+                        // Hiển thị đường dẫn file
+                        logFilePath?.let {
+                            Text("File Log: $it", fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
                 }
 
 
@@ -430,4 +492,15 @@ private fun DirectionButton(
     ) {
         Text(text)
     }
+}
+
+// Hàm mở file log
+fun openFile(filePath: String, context: Context) {
+    val intent = Intent(Intent.ACTION_VIEW)
+    val file = File(filePath)
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+
+    intent.setDataAndType(uri, "text/plain")
+    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    context.startActivity(intent)
 }
