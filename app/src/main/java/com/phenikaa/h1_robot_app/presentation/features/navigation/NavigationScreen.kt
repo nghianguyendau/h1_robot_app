@@ -381,6 +381,20 @@ fun NavigationScreen(
                         }
                     }
                 }
+                Row(){
+                    DirectionButton(
+                        text = "Play music",
+                        onClick = {
+                            viewModel.startMusic()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Stop music",
+                        onClick = {
+                            viewModel.stopMusic()
+                        }
+                    )
+                }
 
 
 

@@ -1,10 +1,15 @@
 package com.phenikaa.h1_robot_app.presentation.features.elevator
 
+import android.app.Application
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
+import com.csjbot.coshandler.core.CsjRobot
+import com.csjbot.coshandler.listener.OnRobotStateListener
+import com.phenikaa.h1_robot_app.R
 import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
@@ -24,6 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ElevatorViewModel @Inject constructor(
+    private val application: Application,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val elevatorRepository: ElevatorRepository,
     private val doorControlUseCase: RobotDoorUseCase,
@@ -79,9 +85,20 @@ class ElevatorViewModel @Inject constructor(
     private val _allStagesCompleted = MutableStateFlow(false)
     val allStagesCompleted: StateFlow<Boolean> get() = _allStagesCompleted
 
+    // Health monitor: trạng thái pin (mặc định 100%)
+    private val _batteryLevel = MutableStateFlow(100)
+    val batteryLevel: StateFlow<Int> = _batteryLevel
+
+    private var mediaPlayer: MediaPlayer? = null
+
+
     init {
         connectWebSocket()
         listenToWebSocket()
+
+        // Bắt đầu lắng nghe trạng thái pin và gửi health monitor
+        startBatteryListener()
+        startHealthMonitor()
     }
 
     fun loadPoints(page: Int = 1) {
@@ -222,6 +239,8 @@ class ElevatorViewModel @Inject constructor(
                     val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
                     Log.d("ElevatorViewModel", "Moving to target: $position")
 
+                    startMusic()
+
                     val result = navigateToDestinationUseCase(position)
                     if (result) {
                         sendTaskStepConfirmed(confirmationCode)
@@ -247,17 +266,18 @@ class ElevatorViewModel @Inject constructor(
                     sendTaskStepConfirmed(confirmationCode)
                 }
                 "GoHome" -> {
-                    val pose = step.getJSONObject("pose")
-                    val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
-                    Log.d("ElevatorViewModel", "Moving to target: $position")
-
-                    val result = navigateToDestinationUseCase(position)
-                    if (result) {
-                        sendTaskStepConfirmed(confirmationCode)
-//                        sendStageFinished()
-
-                    }
+//                    val pose = step.getJSONObject("pose")
+//                    val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
+//                    Log.d("ElevatorViewModel", "Moving to target: $position")
+//
+//                    val result = navigateToDestinationUseCase(position)
+//                    if (result) {
+//                        sendTaskStepConfirmed(confirmationCode)
+////                        sendStageFinished()
+//
+//                    }
                     goHome()
+                    stopMusic()
                 }
             }
         }
@@ -378,4 +398,49 @@ class ElevatorViewModel @Inject constructor(
         }
     }
 
+    private fun startBatteryListener() {
+        // Sử dụng API của CsjRobot để lấy trạng thái pin
+        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+            override fun getBattery(battery: Int) {
+                Log.d("ElevatorViewModel", "Battery level: $battery%")
+                _batteryLevel.value = battery
+            }
+            override fun getCharge(charge: Int) {
+                Log.d("ElevatorViewModel", "Charge state: $charge")
+            }
+        })
+    }
+
+    // Gửi thông tin sức khỏe (health_monitor) mỗi 10 giây
+    private fun startHealthMonitor() {
+        viewModelScope.launch {
+            while (true) {
+                val battery = _batteryLevel.value
+                val message = JSONObject().apply {
+                    put("event", "health_monitor")
+                    put("data", JSONObject().apply {
+                        put("battery", battery)
+                    })
+                }.toString()
+                elevatorRepository.sendMessage(message)
+                Log.d("ElevatorViewModel", "Sent health_monitor: battery=$battery")
+                delay(10000) // Mỗi 10 giây gửi một lần
+            }
+        }
+    }
+
+    // Phát nhạc khi chạy
+    private fun startMusic() {
+        mediaPlayer?.release()
+        mediaPlayer = MediaPlayer.create(application, R.raw.music)
+        mediaPlayer?.isLooping = true // Lặp lại nhạc
+        mediaPlayer?.start()
+    }
+
+    // Dừng nhạc
+    private fun stopMusic() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
 }

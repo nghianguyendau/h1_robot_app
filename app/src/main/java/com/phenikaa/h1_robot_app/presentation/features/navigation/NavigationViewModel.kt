@@ -1,6 +1,8 @@
 package com.phenikaa.h1_robot_app.presentation.features.navigation
 
 import android.app.Application
+import android.content.Context
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -9,6 +11,7 @@ import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.listener.OnMapListListener
 import com.csjbot.coshandler.listener.OnMapListener
 import com.csjbot.coshandler.listener.OnRobotStateListener
+import com.phenikaa.h1_robot_app.R
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.model.Position
@@ -40,7 +43,7 @@ import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
-    application: Application,
+    private val application: Application,
     private val getCurrentPositionUseCase: GetCurrentPositionUseCase,
     private val navigateToPositionUseCase: NavigateToPositionUseCase,
     private val navigateToPosition2UseCase: NavigateToPosition2UseCase,
@@ -80,9 +83,32 @@ class NavigationViewModel @Inject constructor(
     val logFilePath: StateFlow<String?> = _logFilePath.asStateFlow()
     private val _visitedPoints = mutableListOf<String>()
     private var startTime: Long = 0
-    private var startBattery: Int = 100 // Mặc định
-    private var endBattery: Int = 100 // Mặc định
+//    private var startBattery: Int = 100 // Mặc định
+//    private var endBattery: Int = 100 // Mặc định
 
+    private var mediaPlayer: MediaPlayer? = null
+
+    init {
+        viewModelScope.launch {
+            val logFile = File(getApplication<Application>().filesDir, "robot_movement_log.txt")
+            if (logFile.exists()) {
+                _logFilePath.value = logFile.absolutePath
+            }
+        }
+    }
+
+    fun startMusic() {
+        mediaPlayer?.release()
+        mediaPlayer = MediaPlayer.create(application, R.raw.music_test)
+        mediaPlayer?.isLooping = true // Nhạc lặp lại liên tục
+        mediaPlayer?.start()
+    }
+
+    fun stopMusic() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
 
     fun getCurrentPosition() {
         Log.d("NavigationViewModel", "getCurrentPosition called")
@@ -233,10 +259,10 @@ class NavigationViewModel @Inject constructor(
                 // Lấy thời gian kết thúc
                 val endTime = System.currentTimeMillis()
 
-                // Lấy phần trăm pin khi đến nơi (chờ lấy xong)
+                // Lấy phần trăm pin khi đến nơi
                 val endBattery = fetchBatteryLevelSync()
 
-                // Ghi log (CHỈ MỘT LẦN)
+                // Ghi log
                 val logText = """
                 Robot bắt đầu di chuyển lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(startTime))}
                 Robot đến nơi lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(endTime))}

@@ -1,8 +1,15 @@
 package com.phenikaa.h1_robot_app.presentation.shared
 
+import android.annotation.SuppressLint
+import android.app.Application
+import android.media.MediaPlayer
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.csjbot.coshandler.core.CsjRobot
+import com.csjbot.coshandler.listener.OnRobotStateListener
+import com.phenikaa.h1_robot_app.R
 import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.data.model.DataFloors
 import com.phenikaa.h1_robot_app.data.model.NewPoint
@@ -22,16 +29,23 @@ import com.phenikaa.h1_robot_app.domain.usecase.point.GetPointsUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.SavePointUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.UpdatePointUseCase
 import com.phenikaa.h1_robot_app.utils.NavigationUtils.toNavigationStrings
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @HiltViewModel
 class PhenikaaMecViewModel @Inject constructor(
+    private val application: Application,
     private val getPointsUseCase: GetPointsUseCase,
     private val getPointsByFloorIdUseCase: GetPointsByFloorIdUseCase,
     private val savePointUseCase: SavePointUseCase,
@@ -45,7 +59,7 @@ class PhenikaaMecViewModel @Inject constructor(
     private val disconnectUseCase: DisconnectPhoneCallWebSocketUseCase,
     private val sendLoraMessageUseCase: SendLoraMessageUseCase,
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _points = MutableStateFlow<List<Point>>(emptyList())
     val points: StateFlow<List<Point>> = _points.asStateFlow()
@@ -67,6 +81,11 @@ class PhenikaaMecViewModel @Inject constructor(
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
+
+    private val _logFilePath = MutableStateFlow<String?>(null)
+    val logFilePath: StateFlow<String?> = _logFilePath.asStateFlow()
+
+    private var mediaPlayer: MediaPlayer? = null
 
     sealed class NavigationState {
         object Idle : NavigationState()
@@ -203,33 +222,94 @@ class PhenikaaMecViewModel @Inject constructor(
         _selectedPoints.value = emptySet()
     }
 
+    @SuppressLint("SimpleDateFormat")
     fun navigateMultiplePoints() {
         viewModelScope.launch {
             try {
+                startMusic()
+                val startTime = System.currentTimeMillis() // Lấy thời gian bắt đầu
+                val startBattery = fetchBatteryLevelSync() // Lấy pin ban đầu
+
+                val visitedPoints = mutableListOf<String>() // Danh sách điểm đã đi
+
                 selectedPoints.value.toNavigationStrings().forEachIndexed { index, position ->
                     val point = selectedPoints.value.elementAt(index)
+                    visitedPoints.add(point.name ?: "Điểm ${index + 1}") // Lưu điểm đã đi
 
                     val result = navigateToDestinationUseCase(position)
 
                     if (result) {
                         _navigationState.value = NavigationState.PointCompleted(point.name ?: "Điểm ${index + 1}")
+
                         point.name?.let { sendLoraMessageUseCase(loraMessage = it) }
                         delay(10000)
                         sendLoraMessageUseCase(loraMessage = "")
-                    } else {
                     }
                 }
+
+                val endTime = System.currentTimeMillis() // Lấy thời gian kết thúc
+                val endBattery = fetchBatteryLevelSync() // Lấy pin khi đến nơi
+
+                // Ghi log sau khi hoàn thành di chuyển
+                val logText = """
+                =========================
+                Robot bắt đầu di chuyển lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(startTime))}
+                Robot đến nơi lúc: ${SimpleDateFormat("HH:mm:ss").format(Date(endTime))}
+                Các điểm đã đi qua: ${visitedPoints.joinToString(", ")}
+                Pin bắt đầu: $startBattery%
+                Pin kết thúc: $endBattery%
+                =========================
+            """.trimIndent()
+
+                logToFile(logText) // Ghi log vào file
 
                 _navigationState.value = NavigationState.AllPointsCompleted
                 clearSelectedPoints()
 
             } catch (e: Exception) {
+                Log.e("NavigationViewModel", "Lỗi khi di chuyển qua nhiều điểm: ${e.message}")
             } finally {
+                stopMusic()
                 delay(1000)
                 _navigationState.value = NavigationState.Idle
             }
         }
     }
+
+    private suspend fun fetchBatteryLevelSync(): Int {
+        return suspendCoroutine { continuation ->
+            var isResumed = false // Cờ để đảm bảo chỉ gọi resume() một lần
+
+            CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+                override fun getBattery(battery: Int) {
+                    if (!isResumed) {
+                        isResumed = true
+                        continuation.resume(battery)
+                    }
+                }
+
+                override fun getCharge(charge: Int) {
+                }
+            })
+        }
+    }
+
+    fun logToFile(logText: String) {
+        viewModelScope.launch {
+            try {
+                val logFile = File(getApplication<Application>().filesDir, "robot_movement_log.txt")
+                logFile.appendText("$logText\n")
+
+                // Lưu đường dẫn file để sử dụng sau này
+                _logFilePath.value = logFile.absolutePath
+
+                Log.d("NavigationViewModel", "Log ghi vào file: $logText")
+            } catch (e: Exception) {
+                Log.e("NavigationViewModel", "Lỗi khi ghi log: ${e.message}")
+            }
+        }
+    }
+
 
     fun cancelNavi(){
         viewModelScope.launch {
@@ -255,5 +335,22 @@ class PhenikaaMecViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         disconnectWebsocket()
+        stopMusic()
     }
+
+    // Phát nhạc khi chạy
+    private fun startMusic() {
+        mediaPlayer?.release()
+        mediaPlayer = MediaPlayer.create(application, R.raw.music)
+        mediaPlayer?.isLooping = true // Lặp lại nhạc
+        mediaPlayer?.start()
+    }
+
+    // Dừng nhạc
+    private fun stopMusic() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
 }
