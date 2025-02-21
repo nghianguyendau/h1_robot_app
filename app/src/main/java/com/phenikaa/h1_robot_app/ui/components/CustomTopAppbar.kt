@@ -24,12 +24,12 @@ import kotlinx.coroutines.delay
 fun CustomTopAppBar(
     modifier: Modifier = Modifier,
     serialNumber: String = "000674500123301",
-    batteryPercentage: Int = 100,
     showBack: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
     val batteryViewModel: BatteryViewModel = hiltViewModel()
     val batteryPercentage by batteryViewModel.batteryLevel.collectAsState()
+    val isCharging by batteryViewModel.chargeState.collectAsState()
     Column(modifier = modifier) {
         // Original Top App Bar
         Surface(
@@ -97,6 +97,13 @@ fun CustomTopAppBar(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        // 👉 Nếu robot đang sạc, hiển thị icon "đang sạc"
+                        val batteryIcon = if (isCharging) {
+                            R.drawable.rounded_battery_charging_alt_24 // Icon pin đang sạc
+                        } else {
+                            R.drawable.rounded_battery_full_alt_24 // Icon pin bình thường
+                        }
+
                         Icon(
                             painter = painterResource(R.drawable.rounded_battery_full_alt_24),
                             contentDescription = "Battery Status",

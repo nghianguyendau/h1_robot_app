@@ -39,6 +39,9 @@ class MyApplication : MultiDexApplication() {
     private val _batteryLevel = MutableStateFlow(100)
     val batteryLevel = _batteryLevel.asStateFlow()
 
+    private val _chargeState = MutableStateFlow(false)
+    val chargeState = _chargeState.asStateFlow()
+
     override fun onCreate() {
         super.onCreate()
         initializeRobotSDK()
@@ -76,6 +79,7 @@ class MyApplication : MultiDexApplication() {
 
             override fun getCharge(charge: Int) {
                 Log.d("TAG", "Charge state: $charge")
+                _chargeState.value = charge == 1
             }
         })
 //        CsjRobot.getInstance().action.getDoubleDoorState(object : OnDoubleDoorStateListener {

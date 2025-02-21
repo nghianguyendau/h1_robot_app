@@ -20,4 +20,6 @@ class BatteryViewModel @Inject constructor(
     val batteryLevel: StateFlow<Int> = myApp.batteryLevel
         .map { it }
         .stateIn(viewModelScope, SharingStarted.Lazily, 100)
+
+    val chargeState: StateFlow<Boolean> = myApp.chargeState
 }
