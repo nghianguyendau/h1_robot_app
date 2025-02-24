@@ -34,10 +34,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
 import com.phenikaa.h1_robot_app.presentation.ui.navigation.NavigationViewModel
 
 @Composable
 fun RobotElevatorScreen(
+    appNavController: NavHostController,
     robotElevatorViewModel: ElevatorViewModel = hiltViewModel(),
     navigationViewModel: NavigationViewModel = hiltViewModel()
 ) {
@@ -56,124 +59,147 @@ fun RobotElevatorScreen(
         robotElevatorViewModel.loadPoints()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFEFF6FF))
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    CommonScaffold(content = { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEFF6FF))
+                .padding(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .fillMaxHeight()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFFD8D8D8),
-                                Color(0xFF81D4FA)
-                            )
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Chọn cửa mở", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SelectableBox(
-                        text = "Cửa 1",
-                        isSelected = selectedDoors[0],
-                        onClick = {
-                            robotElevatorViewModel.selectDoor(!selectedDoors[0], selectedDoors[1])
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SelectableBox(
-                        text = "Cửa 2",
-                        isSelected = selectedDoors[1],
-                        onClick = {
-                            robotElevatorViewModel.selectDoor(selectedDoors[0], !selectedDoors[1])
-                        }
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(Color(0xFFE4E4E4), shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Chọn điểm đến", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Hiển thị danh sách điểm từ API
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
-                        modifier = Modifier.fillMaxWidth().height(350.dp)
-                    ) {
-                        items(points) { point ->
-                            Button(
-                                onClick = { robotElevatorViewModel.selectPoint(point.name ?: "Unknown", point.id) },
-                                modifier = Modifier.padding(6.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedPoint.any { it.first == point.name }) Color.Gray else Color.White
+                Box(
+                    modifier = Modifier
+                        .weight(0.5f)
+                        .fillMaxHeight()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFFD8D8D8),
+                                    Color(0xFF81D4FA)
                                 )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Chọn cửa mở",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        SelectableBox(
+                            text = "Cửa 1",
+                            isSelected = selectedDoors[0],
+                            onClick = {
+                                robotElevatorViewModel.selectDoor(
+                                    !selectedDoors[0],
+                                    selectedDoors[1]
+                                )
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        SelectableBox(
+                            text = "Cửa 2",
+                            isSelected = selectedDoors[1],
+                            onClick = {
+                                robotElevatorViewModel.selectDoor(
+                                    selectedDoors[0],
+                                    !selectedDoors[1]
+                                )
+                            }
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(Color(0xFFE4E4E4), shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Chọn điểm đến",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Hiển thị danh sách điểm từ API
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(3),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(350.dp)
+                        ) {
+                            items(points) { point ->
+                                Button(
+                                    onClick = {
+                                        robotElevatorViewModel.selectPoint(
+                                            point.name ?: "Unknown", point.id
+                                        )
+                                    },
+                                    modifier = Modifier.padding(6.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedPoint.any { it.first == point.name }) Color.Gray else Color.White
+                                    )
+                                ) {
+                                    Text(point.name ?: "Không có", color = Color.Black)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (currentAction == "DeliveryNotification" && !isDeliveryConfirmed) {
+                            Button(
+                                onClick = {
+//                                robotElevatorViewModel.openSelectedDoors()
+                                    robotElevatorViewModel.confirmDelivery()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                             ) {
-                                Text(point.name ?: "Không có", color = Color.Black)
+                                Text("Lấy hàng", color = Color.White)
+                            }
+                        } else if (currentAction == "DeliveryNotification" && isDeliveryConfirmed) {
+                            Button(
+                                onClick = { robotElevatorViewModel.closeDoorsAndMoveUp() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                            ) {
+                                Text("Xác nhận lấy hàng", color = Color.White)
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    val destinationIds = selectedPoint.map { it.second }
+                                    if (destinationIds.isNotEmpty()) {
+                                        robotElevatorViewModel.requestRoute(destinationIds)
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                            ) {
+                                Text("Start", color = Color.White)
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    if (currentAction == "DeliveryNotification" && !isDeliveryConfirmed) {
-                        Button(
-                            onClick = {
-//                                robotElevatorViewModel.openSelectedDoors()
-                                robotElevatorViewModel.confirmDelivery()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                        ) {
-                            Text("Lấy hàng", color = Color.White)
-                        }
-                    }
-                    else if (currentAction == "DeliveryNotification" && isDeliveryConfirmed) {
-                        Button(
-                            onClick = { robotElevatorViewModel.closeDoorsAndMoveUp() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
-                        ) {
-                            Text("Xác nhận lấy hàng", color = Color.White)
-                        }
-                    } else{
-                        Button(
-                            onClick = {
-                                val destinationIds = selectedPoint.map { it.second }
-                                if (destinationIds.isNotEmpty()) {
-                                    robotElevatorViewModel.requestRoute(destinationIds)
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                        ) {
-                            Text("Start", color = Color.White)
-                        }
-                    }
                 }
-            }
 
+            }
         }
-    }
+    }, navController = appNavController)
 }
 
 @Composable
@@ -192,7 +218,7 @@ fun SelectableBox(
 //            )
             .padding(8.dp)
             .clickable { onClick() },
-        border = BorderStroke(2.dp, if(isSelected) Color.Black else Color.White),
+        border = BorderStroke(2.dp, if (isSelected) Color.Black else Color.White),
         colors = CardDefaults.cardColors(containerColor = Color.White)
 //        contentAlignment = Alignment.Center
     ) {

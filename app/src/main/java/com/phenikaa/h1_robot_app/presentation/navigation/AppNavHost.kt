@@ -45,10 +45,10 @@ fun AppNavHost(
                 )
             }
             composable(Screen.Navigation.route) {
-                NavigationScreen()
+                NavigationScreen(navController)
             }
             composable(Screen.WebSocket.route) {
-                WebSocketScreen()
+                WebSocketScreen(navController)
             }
             composable(Screen.PhoneCall.route) {
                 PhoneCallScreen(
@@ -56,14 +56,14 @@ fun AppNavHost(
                 )
             }
             composable(Screen.DoorScreen.route) {
-                RobotDoorScreen()
+                RobotDoorScreen(navController)
             }
             composable(Screen.ElevatorScreen.route) {
-                RobotElevatorScreen()
+                RobotElevatorScreen(navController)
 //                NavigationScreen()
             }
             composable(Screen.SavePositionScreen.route) {
-                SavePositionScreen()
+                SavePositionScreen(navController)
 //                RobotElevatorScreen()
             }
             composable(Screen.CruisingScreen.route) {

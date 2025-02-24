@@ -68,10 +68,12 @@ fun PassWordScreen(
                     .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = stringResource(id = R.string.type_pass_word),fontSize = 24.sp,
+                Text(
+                    text = stringResource(id = R.string.type_pass_word), fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = AppColor.blackColor,
-                    textAlign = TextAlign.Center,)
+                    textAlign = TextAlign.Center,
+                )
                 Spacer(modifier = Modifier.height(20.dp))
                 PinPutComponent(
                     state.lPassWord,
@@ -79,7 +81,7 @@ fun PassWordScreen(
                     state.pinStatus
                 )
                 Spacer(modifier = Modifier.height(50.dp))
-                if(state.pinStatus == PinPasswordStatus.FALSE){
+                if (state.pinStatus == PinPasswordStatus.FALSE) {
                     Column {
                         Text(
                             text = stringResource(id = R.string.wrong_password),

@@ -46,11 +46,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.model.RosPosition
+import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
 
 @Composable
-fun SavePositionScreen(viewModel: SavePositionViewModel = hiltViewModel()) {
+fun SavePositionScreen(
+    appNavController: NavHostController,
+    viewModel: SavePositionViewModel = hiltViewModel()
+) {
     val points by viewModel.points.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
@@ -62,55 +67,63 @@ fun SavePositionScreen(viewModel: SavePositionViewModel = hiltViewModel()) {
         viewModel.getCurrentPosition()
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
-
-        // Current Position Display
-        currentPosition?.let { position ->
-            Text(
-                text = "Current Position:",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "X: ${position.x}, Y: ${position.y}, Rotation: ${position.rotation}°"
-            )
-        } ?: Text("Fetching current position...")
-       Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-       ) {
-           Text("Danh sách Điểm đã lưu (Trang $currentPage / $totalPages)", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-           Spacer(modifier = Modifier.weight(1f))
-           Button(
-               onClick = { showDialog = true },
-           ) {
-               Text("Thêm Điểm Mới")
-           }
-
-           if (showDialog) {
-               AddPointDialog(viewModel) { showDialog = false }
-           }
-       }
-
-        TableHeader()
-
-        LazyColumn(
-            modifier = Modifier.weight(1f)
+    CommonScaffold(content = { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            items(points) { point ->
-                TableRow(point, viewModel)
+
+            // Current Position Display
+            currentPosition?.let { position ->
+                Text(
+                    text = "Current Position:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "X: ${position.x}, Y: ${position.y}, Rotation: ${position.rotation}°"
+                )
+            } ?: Text("Fetching current position...")
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Danh sách Điểm đã lưu (Trang $currentPage / $totalPages)",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = { showDialog = true },
+                ) {
+                    Text("Thêm Điểm Mới")
+                }
+
+                if (showDialog) {
+                    AddPointDialog(viewModel) { showDialog = false }
+                }
+            }
+
+            TableHeader()
+
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(points) { point ->
+                    TableRow(point, viewModel)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                PaginationControls(viewModel, currentPage, totalPages)
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            PaginationControls(viewModel, currentPage, totalPages)
-        }
-    }
+    }, navController = appNavController)
 }
 
 @Composable
@@ -161,6 +174,7 @@ fun TableRow(point: Point, viewModel: SavePositionViewModel) {
         EditPointDialog(point, viewModel) { showEditDialog = false }
     }
 }
+
 @Composable
 fun TableCell(text: String, isHeader: Boolean = false, modifier: Modifier = Modifier) {
     Box(
@@ -261,9 +275,15 @@ fun EditPointDialog(point: Point, viewModel: SavePositionViewModel, onDismiss: (
             ) {
                 Text("Chỉnh Sửa Điểm", fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-                TextField(value = floorCode, onValueChange = { floorCode = it }, label = { Text("Floor Code") })
+                TextField(
+                    value = floorCode,
+                    onValueChange = { floorCode = it },
+                    label = { Text("Floor Code") })
                 TextField(value = name, onValueChange = { name = it }, label = { Text("Tên điểm") })
-                TextField(value = type, onValueChange = { type = it }, label = { Text("Loại điểm (0-2)") })
+                TextField(
+                    value = type,
+                    onValueChange = { type = it },
+                    label = { Text("Loại điểm (0-2)") })
 
 //                Spacer(modifier = Modifier.height(16.dp))
 
@@ -279,7 +299,15 @@ fun EditPointDialog(point: Point, viewModel: SavePositionViewModel, onDismiss: (
                             val typeInt = type.toIntOrNull() ?: 0
                             viewModel.updatePoint(
                                 point.id, floorCode, name,
-                                RosPosition(name, RosPosition.PosBean(point.x, point.y, point.z ?: 0.0f, point.rotation)), typeInt
+                                RosPosition(
+                                    name,
+                                    RosPosition.PosBean(
+                                        point.x,
+                                        point.y,
+                                        point.z ?: 0.0f,
+                                        point.rotation
+                                    )
+                                ), typeInt
                             )
                             onDismiss()
                         }
@@ -303,7 +331,10 @@ fun PaginationControls(viewModel: SavePositionViewModel, currentPage: Int, total
                 onClick = { viewModel.loadPoints(page + 1) },
                 colors = if (currentPage == page + 1) ButtonDefaults.buttonColors(containerColor = Color.Blue) else ButtonDefaults.buttonColors()
             ) {
-                Text(text = "${page + 1}", color = if (currentPage == page + 1) Color.White else Color.Black)
+                Text(
+                    text = "${page + 1}",
+                    color = if (currentPage == page + 1) Color.White else Color.Black
+                )
             }
             Spacer(modifier = Modifier.width(4.dp))
         }

@@ -19,52 +19,58 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
 
 @Composable
 fun WebSocketScreen(
+    appNavController: NavHostController,
     viewModel: WebSocketViewModel = hiltViewModel()
 ) {
     val message by viewModel.message.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Connection State Display
-        Text(
-            text = when (connectionState) {
-                ConnectionState.CONNECTED -> "Connected"
-                ConnectionState.DISCONNECTED -> "Disconnected"
-            },
-            color = if (connectionState == ConnectionState.CONNECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        // Messages Display
-        Text(
-            text = message?.toString() ?: "No messages yet",
-            modifier = Modifier.padding(16.dp)
-        )
-
-        // Input and Send Button
-        Row(modifier = Modifier.padding(16.dp)) {
-            var input by remember { mutableStateOf("") }
-
-            TextField(
-                value = input,
-                onValueChange = { input = it },
-                modifier = Modifier.weight(1f)
+    CommonScaffold(content = { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Connection State Display
+            Text(
+                text = when (connectionState) {
+                    ConnectionState.CONNECTED -> "Connected"
+                    ConnectionState.DISCONNECTED -> "Disconnected"
+                },
+                color = if (connectionState == ConnectionState.CONNECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(16.dp)
             )
-            Button(onClick = {
-                viewModel.sendMessage(input, "0853101858")
-                input = ""
-            }) {
-                Text("Send")
+
+            // Messages Display
+            Text(
+                text = message?.toString() ?: "No messages yet",
+                modifier = Modifier.padding(16.dp)
+            )
+
+            // Input and Send Button
+            Row(modifier = Modifier.padding(16.dp)) {
+                var input by remember { mutableStateOf("") }
+
+                TextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    modifier = Modifier.weight(1f)
+                )
+                Button(onClick = {
+                    viewModel.sendMessage(input, "0853101858")
+                    input = ""
+                }) {
+                    Text("Send")
+                }
             }
         }
-    }
+    }, navController = appNavController)
+
 
     // Ensuring connection on screen load
     LaunchedEffect(Unit) {

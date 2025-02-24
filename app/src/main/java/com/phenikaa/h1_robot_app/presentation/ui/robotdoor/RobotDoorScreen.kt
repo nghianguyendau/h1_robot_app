@@ -20,160 +20,165 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
 
 @Composable
 fun RobotDoorScreen(
+    appNavController: NavHostController,
     viewModel: RobotDoorViewModel = hiltViewModel()
 ) {
     val doorState by viewModel.doorState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Door Control Panel",
+    CommonScaffold(content = { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Door Control Panel",
 //            style = MaterialTheme.typography.h5,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-        // Double Door Controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            // Double Door Controls
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Text(
-                    text = "Double Door Controls",
-//                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Button(
-                        onClick = {
-                            Log.d("UI", "Open Door button clicked")
-                            viewModel.openDoor()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                    ) {
-                        Text("Open Door")
-                    }
-
-                    Button(
-                        onClick = {
-                            Log.d("UI", "Close Door button clicked")
-                            viewModel.closeDoor()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
-                    ) {
-                        Text("Close Door")
-                    }
-                }
-
-                doorState?.let { (state1, state2) ->
                     Text(
-                        text = "Door State: $state1, $state2",
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Single Floor Controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "First Floor Controls",
+                        text = "Double Door Controls",
 //                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        onClick = {
-                            viewModel.openOneFloorDoor()
-                            Log.d("UI", "Open Door button clickeddddddddddddddddd")
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text("Open First Floor")
+                        Button(
+                            onClick = {
+                                Log.d("UI", "Open Door button clicked")
+                                viewModel.openDoor()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text("Open Door")
+                        }
+
+                        Button(
+                            onClick = {
+                                Log.d("UI", "Close Door button clicked")
+                                viewModel.closeDoor()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp)
+                        ) {
+                            Text("Close Door")
+                        }
                     }
 
-                    Button(
-                        onClick = { viewModel.closeOneFloorDoor() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
-                    ) {
-                        Text("Close First Floor")
+                    doorState?.let { (state1, state2) ->
+                        Text(
+                            text = "Door State: $state1, $state2",
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Second Floor Controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            // Single Floor Controls
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Text(
-                    text = "Second Floor Controls",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Button(
-                        onClick = { viewModel.openTwoFloorDoor() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                    ) {
-                        Text("Open Second Floor")
-                    }
+                    Text(
+                        text = "First Floor Controls",
+//                    style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-                    Button(
-                        onClick = { viewModel.closeTwoFloorDoor() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text("Close Second Floor")
+                        Button(
+                            onClick = {
+                                viewModel.openOneFloorDoor()
+                                Log.d("UI", "Open Door button clickeddddddddddddddddd")
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text("Open First Floor")
+                        }
+
+                        Button(
+                            onClick = { viewModel.closeOneFloorDoor() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp)
+                        ) {
+                            Text("Close First Floor")
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Second Floor Controls
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Second Floor Controls",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(
+                            onClick = { viewModel.openTwoFloorDoor() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text("Open Second Floor")
+                        }
+
+                        Button(
+                            onClick = { viewModel.closeTwoFloorDoor() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp)
+                        ) {
+                            Text("Close Second Floor")
+                        }
                     }
                 }
             }
         }
-    }
+    }, navController = appNavController)
 }
