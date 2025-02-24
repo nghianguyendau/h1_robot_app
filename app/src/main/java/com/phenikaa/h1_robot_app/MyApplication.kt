@@ -22,6 +22,8 @@ import com.phenikaa.h1_robot_app.utils.SharedPreferencesSDCard
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
@@ -33,6 +35,12 @@ class MyApplication : MultiDexApplication() {
 
     @Inject
     lateinit var robotDoorUseCase: RobotDoorUseCase
+
+    private val _batteryLevel = MutableStateFlow(100)
+    val batteryLevel = _batteryLevel.asStateFlow()
+
+    private val _chargeState = MutableStateFlow(false)
+    val chargeState = _chargeState.asStateFlow()
 
     override fun onCreate() {
         super.onCreate()
@@ -57,20 +65,23 @@ class MyApplication : MultiDexApplication() {
         })
     }
 
-    private suspend fun setupRobotModules() {
+
+    fun setupRobotModules() {
         CsjRobot.enableSlam(true)
 
         CsjRobot.getInstance().init(this)
         checkAndRequestOverlayPermission(this)
-//        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
-//            override fun getBattery(battery: Int) {
-//                Log.d("TAG", "Battery level: $battery%")
-//            }
-//
-//            override fun getCharge(charge: Int) {
-//                Log.d("TAG", "Charge state: $charge")
-//            }
-//        })
+        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+            override fun getBattery(battery: Int) {
+                Log.d("TAG", "Battery level: $battery%")
+                _batteryLevel.value = battery
+            }
+
+            override fun getCharge(charge: Int) {
+                Log.d("TAG", "Charge state: $charge")
+                _chargeState.value = charge == 1
+            }
+        })
 //        CsjRobot.getInstance().action.getDoubleDoorState(object : OnDoubleDoorStateListener {
 //            override fun onDoorState(state1: Int, state2: Int) {
 //                Log.d("TAG", "Door state: state1=$state1, state2=$state2")
