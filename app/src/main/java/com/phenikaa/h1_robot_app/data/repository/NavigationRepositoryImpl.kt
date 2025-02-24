@@ -1,16 +1,11 @@
 package com.phenikaa.h1_robot_app.data.repository
 
 import android.util.Log
-import com.csjbot.coshandler.listener.OnMapListListener
 import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
-import com.phenikaa.h1_robot_app.domain.model.MapState
-import com.phenikaa.h1_robot_app.domain.model.Position
-import com.phenikaa.h1_robot_app.domain.model.NavigationState
+import com.phenikaa.h1_robot_app.domain.entity.Position
 import com.phenikaa.h1_robot_app.domain.repository.NavigationRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 

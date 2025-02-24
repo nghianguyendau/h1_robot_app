@@ -1,0 +1,17 @@
+package com.phenikaa.h1_robot_app.domain.entity
+
+data class PhoneCallMessage (
+    var event: String,
+    var number: String,
+)
+
+data class PhoneCallResponseMessage (
+    var event: String,
+    var status: Int,
+    var info: String
+)
+
+data class LoraMessage (
+    var event: String ?= "send-lora",
+    var message: String
+)

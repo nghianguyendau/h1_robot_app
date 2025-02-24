@@ -10,21 +10,14 @@ import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.listener.OnAuthenticationListener
-import com.csjbot.coshandler.listener.OnDoubleDoorStateListener
-import com.csjbot.coshandler.listener.OnMapListListener
-import com.csjbot.coshandler.listener.OnMapStateListener
 import com.csjbot.coshandler.listener.OnPositionListener
-import com.csjbot.coshandler.listener.OnRobotStateListener
-import com.csjbot.coshandler.listener.OnSpeedGetListener
-import com.csjbot.coshandler.listener.OnWarningCheckSelfListener
+import com.phenikaa.h1_robot_app.domain.usecase.InitPassWordAppUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.utils.SharedPreferencesSDCard
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 import javax.inject.Inject
 
 
@@ -34,13 +27,14 @@ class MyApplication : MultiDexApplication() {
     @Inject
     lateinit var robotDoorUseCase: RobotDoorUseCase
 
+
     override fun onCreate() {
         super.onCreate()
-        initializeRobotSDK()
-        initializeSharedPreferences()
-        GlobalScope.launch {
-            setupRobotModules()
-        }
+//        initializeRobotSDK()
+//        initializeSharedPreferences()
+//        GlobalScope.launch {
+//            setupRobotModules()
+//        }
     }
 
     private fun initializeRobotSDK() {
@@ -193,6 +187,7 @@ class MyApplication : MultiDexApplication() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(context)) {
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             }
         }

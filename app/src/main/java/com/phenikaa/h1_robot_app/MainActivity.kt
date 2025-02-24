@@ -13,8 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
 import com.phenikaa.h1_robot_app.presentation.navigation.AppNavHost
-import com.phenikaa.h1_robot_app.ui.components.CustomTopAppBar
-import com.phenikaa.h1_robot_app.ui.theme.H1_robot_appTheme
+import com.phenikaa.h1_robot_app.presentation.theme.H1_robot_appTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
