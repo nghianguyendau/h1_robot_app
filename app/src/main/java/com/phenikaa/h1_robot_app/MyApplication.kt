@@ -68,102 +68,28 @@ class MyApplication : MultiDexApplication() {
 
     fun setupRobotModules() {
         CsjRobot.enableSlam(true)
-
         CsjRobot.getInstance().init(this)
         checkAndRequestOverlayPermission(this)
-        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
-            override fun getBattery(battery: Int) {
-                Log.d("TAG", "Battery level: $battery%")
-                _batteryLevel.value = battery
-            }
 
-            override fun getCharge(charge: Int) {
-                Log.d("TAG", "Charge state: $charge")
-                _chargeState.value = charge == 1
-            }
-        })
-//        CsjRobot.getInstance().action.getDoubleDoorState(object : OnDoubleDoorStateListener {
-//            override fun onDoorState(state1: Int, state2: Int) {
-//                Log.d("TAG", "Door state: state1=$state1, state2=$state2")
-//            }
-//        })
-//
-//        CsjRobot.getInstance().state.getEmergencyStatus { emergencyStatus ->
-//                CsjRobot.getInstance().state.releaseEmergency()
-//        }
-//
-//        CsjRobot.getInstance().state.getMicroVolume { p0 -> Log.d("Get MicroVolumne", "Get MicroVolumne: $p0")}
-//
-//        CsjRobot.getInstance().state.getRobotHWVersion()
-//
-//        CsjRobot.getInstance().state.getRobotType{p0 -> Log.d("Type", "Type: $p0")}
-//
-//        CsjRobot.getInstance().state.getSlamVersion()
-//
-//        CsjRobot.getInstance().state.getSN { p0 -> Log.d("SN", "SNNNNN: $p0") }
-//
-//        CsjRobot.getInstance().action.getMapList(object: OnMapListListener {
-//            override fun response(p0: String?) {
-//                Log.d("MAPPPPPPPPP LIST", "Response from getMapList: $p0")
-//            }
-//        })
-//
-        CsjRobot.getInstance().getAction().getPosition(object: OnPositionListener {
-            override fun positionInfo(p0: String) {
-                Log.d("Positionnnnnn", "Position: $p0")
-            }
-        })
-//
-//        CsjRobot.getInstance().action.getSpeed { p0 -> Log.d("Speeddddd", "Speed: $p0") }
-//
-//        CsjRobot.getInstance().action.getMapState(object: OnMapStateListener {
-//            override fun mapState(p0: String) {
-//                Log.d("Map State", "Map State $p0")
-//            }
-//        })
-//
-//        CsjRobot.getInstance().action.getDockerState{ p0 -> Log.d("Docker State", "Docker State $p0")}
-//
-//
-//        CsjRobot.getInstance().state.checkSelf(object : OnWarningCheckSelfListener {
-//            override fun response(p0: String) {
-//                Log.d("TAGGGGG", "Response from checkSelf: $p0")
-//
-//                try {
-//                    // Chuyển đổi dữ liệu JSON từ p0 (dữ liệu trả về dưới dạng JSON)
-//                    val jsonObject = JSONObject(p0)
-//
-//                    // Log các trường thông tin trong JSON
-//                    val firmwareVersion = jsonObject.optString("firmwareversion", "N/A")
-//                    val model = jsonObject.optString("model", "N/A")
-//                    val serialNumber = jsonObject.optString("serialnumber", "N/A")
-//                    val state = jsonObject.optString("state", "N/A")
-//                    val type = jsonObject.optString("type", "N/A")
-//
-//                    // In thông tin chi tiết ra log
-//                    Log.d("TAG", "Firmware Version: $firmwareVersion")
-//                    Log.d("TAG", "Model: $model")
-//                    Log.d("TAG", "Serial Number: $serialNumber")
-//                    Log.d("TAG", "State: $state")
-//                    Log.d("TAG", "Type: $type")
-//                } catch (e: Exception) {
-//                    Log.e("TAG", "Error parsing self check response", e)
-//                }
-//            }
-//        })
-//
-//        CsjRobot.getInstance().setSlamVersionListener { json ->
-//            var jsonObject: JSONObject? = null
-//            try {
-//                jsonObject = JSONObject(json)
-//                Log.e("TAG", jsonObject.toString())
-//            } catch (e: JSONException) {
-//                e.printStackTrace()
-//            }
-//        }
+        // Chạy vòng lặp liên tục để cập nhật pin mỗi giây
+        GlobalScope.launch {
+            while (true) {
+                delay(1000) // Cập nhật mỗi 1 giây
+                CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+                    override fun getBattery(battery: Int) {
+                        Log.d("TAG", "Battery level: $battery%")
+                        _batteryLevel.value = battery
+                    }
 
-//        openDoors()
+                    override fun getCharge(charge: Int) {
+                        Log.d("TAG", "Charge state: $charge")
+                        _chargeState.value = charge == 1
+                    }
+                })
+            }
+        }
     }
+
 
     private fun checkSelfStatus() {
         Log.d("TAG", "Checking self status...")
