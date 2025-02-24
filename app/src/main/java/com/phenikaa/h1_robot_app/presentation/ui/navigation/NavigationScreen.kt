@@ -1,6 +1,10 @@
 package com.phenikaa.h1_robot_app.presentation.ui.navigation
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,11 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.csjbot.coshandler.listener.OnMapListener
+import java.io.File
 
 @Composable
 fun NavigationScreen(
@@ -113,6 +120,47 @@ fun NavigationScreen(
                 .verticalScroll(
                     rememberScrollState()
                 )) {
+                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DirectionButton(
+                        text = "Open Door",
+                        onClick = {
+                            viewModel.openDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close Door",
+                        onClick = {
+                            viewModel.closeDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Open First Door",
+                        onClick = {
+                            viewModel.openOneFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close First Door",
+                        onClick = {
+                            viewModel.closeOneFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Open Second Door",
+                        onClick = {
+                            viewModel.openTwoFloorDoor()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Close Second Door",
+                        onClick = {
+                            viewModel.closeTwoFloorDoor()
+                        }
+                    )
+                }
                 Row(
 //                    modifier = Modifier.fillMaxWidth(),
 //                    horizontalArrangement = Arrangement.SpaceEvenly
@@ -313,6 +361,36 @@ fun NavigationScreen(
                             viewModel.setSpeed(0.4f)
                         }
                     )
+                    val logFilePath by viewModel.logFilePath.collectAsState()
+                    val context = LocalContext.current
+
+                    Column {
+                        // Nút mở file log
+                        Button(onClick = {
+                            logFilePath?.let { openLogFile(context) }
+                        }) {
+                            Text("Xem log di chuyển")
+                        }
+
+                        // Hiển thị đường dẫn file
+                        logFilePath?.let {
+                            Text("File Log: $it", fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+                }
+                Row(){
+                    DirectionButton(
+                        text = "Play music",
+                        onClick = {
+                            viewModel.startMusic()
+                        }
+                    )
+                    DirectionButton(
+                        text = "Stop music",
+                        onClick = {
+                            viewModel.stopMusic()
+                        }
+                    )
                 }
 
 
@@ -427,4 +505,23 @@ private fun DirectionButton(
     ) {
         Text(text)
     }
+}
+
+// Hàm mở file log
+fun openLogFile(context: Context) {
+    val logFile = File(context.filesDir, "robot_movement_log.txt")
+
+    if (!logFile.exists()) {
+        Toast.makeText(context, "Log file không tồn tại!", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val uri: Uri = FileProvider.getUriForFile(context, "com.phenikaa.h1_robot_app.provider", logFile)
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "text/plain")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
+    context.startActivity(Intent.createChooser(intent, "Open log file"))
 }

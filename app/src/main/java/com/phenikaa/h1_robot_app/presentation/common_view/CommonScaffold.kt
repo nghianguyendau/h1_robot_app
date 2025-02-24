@@ -43,7 +43,7 @@ fun CommonScaffold(
                     IconButton(onClick = finalOnTapBackButton) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "",
                             tint = Color.Black
                         )
                     }

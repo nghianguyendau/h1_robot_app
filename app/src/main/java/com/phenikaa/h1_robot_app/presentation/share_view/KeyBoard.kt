@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,10 +33,9 @@ fun KeyBoard(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
-        modifier = Modifier.padding(horizontal = 200.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 200.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
-
     ) {
         items(numbers.size) { index ->
             KeyboardButton(
@@ -57,6 +58,7 @@ fun KeyboardButton(
     Box(
         modifier = Modifier
             .size(80.dp)
+            .shadow(3.dp,RoundedCornerShape(12.dp),clip = true,AppColor.neutral100, spotColor = AppColor.neutral100)
             .clip(RoundedCornerShape(12.dp))
             .clickable(enabled = true, onClick = {
                 if (isRemove) {
@@ -65,7 +67,7 @@ fun KeyboardButton(
                     onTapKeyNumber(text)
                 }
             })
-            .background(if (isRemove) AppColor.red400 else AppColor.greyColor.copy(alpha = 0.5f))
+            .background(if (isRemove) AppColor.red400 else AppColor.neutral200)
             .padding(8.dp),
         contentAlignment = Alignment.Center
     ) {
