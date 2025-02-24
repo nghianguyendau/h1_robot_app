@@ -38,11 +38,11 @@ class MyApplication : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
-        initializeRobotSDK()
-        initializeSharedPreferences()
-        GlobalScope.launch {
-            setupRobotModules()
-        }
+//        initializeRobotSDK()
+//        initializeSharedPreferences()
+//        GlobalScope.launch {
+//            setupRobotModules()
+//        }
     }
 
     private fun initializeRobotSDK() {

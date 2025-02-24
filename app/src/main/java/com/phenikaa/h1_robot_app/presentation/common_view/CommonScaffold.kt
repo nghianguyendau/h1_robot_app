@@ -1,5 +1,6 @@
 package com.phenikaa.h1_robot_app.presentation.common_view
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,13 @@ fun CommonScaffold(
                 }
             }
         },
-        content = content
+        content = { paddingValues ->
+            Box(modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()) {
+                content(paddingValues)
+            }
+        },
+        modifier = Modifier.fillMaxSize()
     )
 }

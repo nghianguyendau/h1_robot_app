@@ -60,11 +60,9 @@ fun AppNavHost(
             }
             composable(Screen.ElevatorScreen.route) {
                 RobotElevatorScreen(navController)
-//                NavigationScreen()
             }
             composable(Screen.SavePositionScreen.route) {
                 SavePositionScreen(navController)
-//                RobotElevatorScreen()
             }
             composable(Screen.CruisingScreen.route) {
                 CruisingScreen(navController)
