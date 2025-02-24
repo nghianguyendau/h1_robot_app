@@ -3,17 +3,12 @@ package com.phenikaa.h1_robot_app.data.repository
 import android.util.Log
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.api.ApiClient
-import com.phenikaa.h1_robot_app.data.api.ApiService
 import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
 import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
-import com.phenikaa.h1_robot_app.data.model.ElevatorData
 import com.phenikaa.h1_robot_app.data.model.ElevatorRequest
 import com.phenikaa.h1_robot_app.data.model.ElevatorResponse
-import com.phenikaa.h1_robot_app.domain.model.ElevatorMessage
-import com.phenikaa.h1_robot_app.domain.model.ElevatorResponseMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ElevatorRepository @Inject constructor(

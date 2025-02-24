@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">h1_robot_app</string>
+    <string name="passWord">Pass Word</string>
+    <string name="wrong_password">Mật khẩu không đúng</string>
+    <string name="type_pass_word">Nhập mật khẩu</string>
 </resources>

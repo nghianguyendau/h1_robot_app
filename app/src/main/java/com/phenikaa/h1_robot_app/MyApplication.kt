@@ -10,13 +10,9 @@ import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.listener.OnAuthenticationListener
-import com.csjbot.coshandler.listener.OnDoubleDoorStateListener
-import com.csjbot.coshandler.listener.OnMapListListener
-import com.csjbot.coshandler.listener.OnMapStateListener
 import com.csjbot.coshandler.listener.OnPositionListener
 import com.csjbot.coshandler.listener.OnRobotStateListener
-import com.csjbot.coshandler.listener.OnSpeedGetListener
-import com.csjbot.coshandler.listener.OnWarningCheckSelfListener
+import com.phenikaa.h1_robot_app.domain.usecase.InitPassWordAppUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.utils.SharedPreferencesSDCard
 import dagger.hilt.android.HiltAndroidApp
@@ -25,8 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 import javax.inject.Inject
 
 
@@ -54,15 +48,15 @@ class MyApplication : MultiDexApplication() {
     private fun initializeRobotSDK() {
         CsjRobot.authentication(this, "1b0bb9fa-b9a2-4e37-88e6-410ab33670c0",
             "D89E442C9C1082919A38B7F5CB9A45D8", object : OnAuthenticationListener {
-            override fun success() {
-                Log.d("TAG", "Authorization succeeded!")
+                override fun success() {
+                    Log.d("TAG", "Authorization succeeded!")
 
-            }
+                }
 
-            override fun error() {
-                Log.d("TAG", "Privilege grant failed!")
-            }
-        })
+                override fun error() {
+                    Log.d("TAG", "Privilege grant failed!")
+                }
+            })
     }
 
 
@@ -129,7 +123,11 @@ class MyApplication : MultiDexApplication() {
     fun checkAndRequestOverlayPermission(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(context)) {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${context.packageName}")
+                )
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 context.startActivity(intent)
             }
         }

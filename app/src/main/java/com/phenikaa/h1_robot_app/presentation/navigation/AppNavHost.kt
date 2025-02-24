@@ -7,15 +7,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.phenikaa.h1_robot_app.presentation.features.cruising.CruisingScreen
-import com.phenikaa.h1_robot_app.presentation.features.elevator.RobotElevatorScreen
-import com.phenikaa.h1_robot_app.presentation.features.home.HomeScreen
-import com.phenikaa.h1_robot_app.presentation.features.navigation.NavigationScreen
-import com.phenikaa.h1_robot_app.presentation.features.phonecall.PhoneCallScreen
-import com.phenikaa.h1_robot_app.presentation.features.robotdoor.RobotDoorScreen
-import com.phenikaa.h1_robot_app.presentation.features.saveposition.SavePositionScreen
-import com.phenikaa.h1_robot_app.presentation.features.websocket.WebSocketScreen
-import com.phenikaa.h1_robot_app.ui.components.CustomTopAppBar
+import com.phenikaa.h1_robot_app.presentation.ui.cruising.CruisingScreen
+import com.phenikaa.h1_robot_app.presentation.ui.elevator.RobotElevatorScreen
+import com.phenikaa.h1_robot_app.presentation.ui.home.HomeScreen
+import com.phenikaa.h1_robot_app.presentation.ui.navigation.NavigationScreen
+import com.phenikaa.h1_robot_app.presentation.ui.phonecall.PhoneCallScreen
+import com.phenikaa.h1_robot_app.presentation.ui.robotdoor.RobotDoorScreen
+import com.phenikaa.h1_robot_app.presentation.ui.saveposition.SavePositionScreen
+import com.phenikaa.h1_robot_app.presentation.ui.websocket.WebSocketScreen
+import com.phenikaa.h1_robot_app.presentation.common_view.CustomTopAppBar
+import com.phenikaa.h1_robot_app.presentation.ui.password.PassWordPage
+
 
 @Composable
 fun AppNavHost(
@@ -43,10 +45,10 @@ fun AppNavHost(
                 )
             }
             composable(Screen.Navigation.route) {
-                NavigationScreen()
+                NavigationScreen(navController)
             }
             composable(Screen.WebSocket.route) {
-                WebSocketScreen()
+                WebSocketScreen(navController)
             }
             composable(Screen.PhoneCall.route) {
                 PhoneCallScreen(
@@ -54,18 +56,21 @@ fun AppNavHost(
                 )
             }
             composable(Screen.DoorScreen.route) {
-                RobotDoorScreen()
+                RobotDoorScreen(navController)
             }
             composable(Screen.ElevatorScreen.route) {
-                RobotElevatorScreen()
+                RobotElevatorScreen(navController)
 //                NavigationScreen()
             }
             composable(Screen.SavePositionScreen.route) {
-                SavePositionScreen()
+                SavePositionScreen(navController)
 //                RobotElevatorScreen()
             }
             composable(Screen.CruisingScreen.route) {
-                CruisingScreen()
+                CruisingScreen(navController)
+            }
+            composable(Screen.PassWordPage.route) {
+                PassWordPage(navController)
             }
         }
     }

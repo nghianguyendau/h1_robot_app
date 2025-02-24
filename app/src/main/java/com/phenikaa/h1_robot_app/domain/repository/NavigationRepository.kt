@@ -1,12 +1,8 @@
 package com.phenikaa.h1_robot_app.domain.repository
 
-import com.csjbot.coshandler.listener.OnMapListListener
 import com.csjbot.coshandler.listener.OnMapListener
 import com.phenikaa.h1_robot_app.data.model.RosPosition
-import com.phenikaa.h1_robot_app.domain.model.Position
-import com.phenikaa.h1_robot_app.domain.model.NavigationState
-import com.phenikaa.h1_robot_app.domain.model.MapState
-import kotlinx.coroutines.flow.Flow
+import com.phenikaa.h1_robot_app.domain.entity.Position
 
 interface NavigationRepository {
     suspend fun getCurrentPosition(): Position
