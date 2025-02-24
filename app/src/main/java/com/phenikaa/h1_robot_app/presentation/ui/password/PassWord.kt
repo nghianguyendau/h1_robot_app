@@ -35,7 +35,7 @@ fun PassWordPage(
 ) {
     viewModel.navigationState.collectAsEffect { navigationState ->
         when (navigationState) {
-            is PassWordNavigationState.NavigationBar -> navController.navigate(Screen.CruisingScreen.route)
+            is PassWordNavigationState.NavigationBar -> navController.navigate(Screen.ElevatorScreen.route)
         }
     }
 
