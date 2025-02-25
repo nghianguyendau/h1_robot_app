@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
+import com.phenikaa.h1_robot_app.presentation.navigation.Screen
 import com.phenikaa.h1_robot_app.presentation.ui.navigation.NavigationViewModel
 
 @Composable
@@ -199,7 +200,9 @@ fun RobotElevatorScreen(
 
             }
         }
-    }, navController = appNavController)
+    }, navController = appNavController,
+        onTapBackButton = { appNavController.navigate(Screen.Home.route) }
+        )
 }
 
 @Composable

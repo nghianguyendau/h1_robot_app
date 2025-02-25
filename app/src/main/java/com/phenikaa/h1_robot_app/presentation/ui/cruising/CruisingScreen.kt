@@ -257,7 +257,6 @@ fun CruisingScreen(
             }
         },
         navController = navController,
-        onTapBackButton = { navController.navigate(Screen.Home.route) }
     )
 }
 
