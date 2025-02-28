@@ -1,13 +1,19 @@
 package com.phenikaa.h1_robot_app.presentation.ui.elevator
 
+import android.app.Application
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
+import com.csjbot.coshandler.core.CsjRobot
+import com.csjbot.coshandler.listener.OnRobotStateListener
+import com.phenikaa.h1_robot_app.R
 import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
+import com.phenikaa.h1_robot_app.domain.usecase.navigation.MoveDirectionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestinationUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
 import com.phenikaa.h1_robot_app.presentation.ui.navigation.NavigationViewModel
@@ -16,17 +22,19 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltViewModel
-class ElevatorGoHomeViewModel @Inject constructor(
+class DeliveryViewModel @Inject constructor(
+    private val application: Application,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val elevatorRepository: ElevatorRepository,
-    private val doorControlUseCase: RobotDoorUseCase
+    private val doorControlUseCase: RobotDoorUseCase,
+    private val moveDirection: MoveDirectionUseCase,
+
 
     ) : ViewModel() {
 
@@ -55,21 +63,42 @@ class ElevatorGoHomeViewModel @Inject constructor(
     private val _totalPages = MutableStateFlow(1)
     val totalPages: StateFlow<Int> get() = _totalPages
 
-    private val _selectedPoint = MutableStateFlow<String?>(null)
-    val selectedPoint: StateFlow<String?> get() = _selectedPoint
+    private val _selectedPoints = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
+    val selectedPoints: StateFlow<List<Pair<String, Int>>> get() = _selectedPoints
+
+    private var currentTargetIndex = 0 // Biến theo dõi điểm hiện tại
+
 
     private var selectedPointId: Int? = null
 
-    private val _selectedDoors = MutableStateFlow<Pair<Boolean, Boolean>>(false to false)
-    val selectedDoors: StateFlow<Pair<Boolean, Boolean>> = _selectedDoors.asStateFlow()
+    private val _selectedDoors = MutableStateFlow<List<Boolean>>(listOf(false, false))
+    val selectedDoors: StateFlow<List<Boolean>> get() = _selectedDoors
 
     private var _routeAnalyzeData: JSONObject? = null
 
+    private val _currentAction = MutableStateFlow<String?>(null)
+    val currentAction: StateFlow<String?> get() = _currentAction
+
+    private val _isDeliveryConfirmed = MutableStateFlow(false)
+    val isDeliveryConfirmed: StateFlow<Boolean> get() = _isDeliveryConfirmed
+
+    private val _allStagesCompleted = MutableStateFlow(false)
+    val allStagesCompleted: StateFlow<Boolean> get() = _allStagesCompleted
+
+    // Health monitor: trạng thái pin (mặc định 100%)
+    private val _batteryLevel = MutableStateFlow(100)
+    val batteryLevel: StateFlow<Int> = _batteryLevel
+
+    private var mediaPlayer: MediaPlayer? = null
 
 
     init {
-//        connectWebSocket()
-//        listenToWebSocket()
+        connectWebSocket()
+        listenToWebSocket()
+
+        // Bắt đầu lắng nghe trạng thái pin và gửi health monitor
+        startBatteryListener()
+        startHealthMonitor()
     }
 
     fun loadPoints(page: Int = 1) {
@@ -104,13 +133,13 @@ class ElevatorGoHomeViewModel @Inject constructor(
     }
 
     private fun handleWebSocketMessage(message: String) {
-//        Log.e("ddd", "iiiiiii")
-//        val jsonObject = JSONObject(message)
-//        when (jsonObject.getString("event")) {
-//            "route_analyze" -> handleRouteAnalyze(jsonObject)
-//            "task_step_confirmed" -> handleTaskStepConfirmed(jsonObject)
-//            "stage_finished" -> handleStageFinished(jsonObject)
-//        }
+        Log.e("ddd", "iiiiiii")
+        val jsonObject = JSONObject(message)
+        when (jsonObject.getString("event")) {
+            "route_analyze" -> handleRouteAnalyze(jsonObject)
+            "task_step_confirmed" -> handleTaskStepConfirmed(jsonObject)
+            "stage_finished" -> handleStageFinished(jsonObject)
+        }
     }
 
     private fun handleRouteAnalyze(json: JSONObject) {
@@ -145,22 +174,26 @@ class ElevatorGoHomeViewModel @Inject constructor(
     }
 
     private fun handleStageFinished(json: JSONObject) {
-        Log.d("ElevatorViewModel", "Stage completed, checking for next stage...")
+        Log.d("ElevatorViewModel", "Stage completed, checking for next target...")
 
         val finishedStageId = json.getJSONObject("data").getInt("stage_id")
 
-        // Kiểm tra nếu còn stage trong route_analyze
+        // Kiểm tra danh sách stage từ dữ liệu gốc route_analyze
         val stages = _routeAnalyzeData?.getJSONObject("data")?.getJSONArray("data") ?: return
-
         val nextStageIndex = findStageIndexById(stages, finishedStageId) + 1
+
         if (nextStageIndex < stages.length()) {
             Log.d("ElevatorViewModel", "Starting next stage...")
 
             startStage(stages, nextStageIndex) // Chuyển sang stage tiếp theo
         } else {
             Log.d("ElevatorViewModel", "All stages completed.")
+            _allStagesCompleted.value = true // Hiển thị lại nút Start
         }
     }
+
+
+
 
     private fun startStage(stages: JSONArray, stageIndex: Int) {
         val stage = stages.getJSONObject(stageIndex)
@@ -195,6 +228,8 @@ class ElevatorGoHomeViewModel @Inject constructor(
         val action = step.getString("action")
         val confirmationCode = step.getString("confirmation_code")
 
+        _currentAction.value = action // Cập nhật hành động hiện tại
+
         Log.d("ElevatorViewModel", "Executing action: $action")
 
         viewModelScope.launch {
@@ -204,10 +239,16 @@ class ElevatorGoHomeViewModel @Inject constructor(
                     val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
                     Log.d("ElevatorViewModel", "Moving to target: $position")
 
+                    startMusic()
+
                     val result = navigateToDestinationUseCase(position)
                     if (result) {
                         sendTaskStepConfirmed(confirmationCode)
                     }
+                }
+                "DeliveryNotification" -> {
+                    Log.d("ElevatorViewModel", "Waiting for user to confirm delivery")
+                    _isDeliveryConfirmed.value = false
                 }
                 "CallLift" -> {
                     Log.d("ElevatorViewModel", "Calling elevator")
@@ -224,9 +265,24 @@ class ElevatorGoHomeViewModel @Inject constructor(
                     delay(5000)
                     sendTaskStepConfirmed(confirmationCode)
                 }
+                "GoHome" -> {
+//                    val pose = step.getJSONObject("pose")
+//                    val position = """{"x": ${pose.getDouble("x")}, "y": ${pose.getDouble("y")}, "z": "0.0", "rotation": ${pose.getDouble("rotation")}}"""
+//                    Log.d("ElevatorViewModel", "Moving to target: $position")
+//
+//                    val result = navigateToDestinationUseCase(position)
+//                    if (result) {
+//                        sendTaskStepConfirmed(confirmationCode)
+////                        sendStageFinished()
+//
+//                    }
+                    goHome()
+                    stopMusic()
+                }
             }
         }
     }
+
 
 
     private fun sendTaskStepConfirmed(confirmationCode: String) {
@@ -245,7 +301,7 @@ class ElevatorGoHomeViewModel @Inject constructor(
             put("event", "stage_finished")
             put("data", JSONObject().apply {
                 put("stage_id", stageId)
-                put("status", 3)
+                put("status", 2)
             })
         }.toString()
 
@@ -262,41 +318,86 @@ class ElevatorGoHomeViewModel @Inject constructor(
         Log.d("ElevatorViewModel", "Loading map: $mapName")
     }
 
-    fun requestRoute(destination: Int) {
+    fun requestRoute(destinations: List<Int>) {
+        viewModelScope.launch {
+            doorControlUseCase.closeOneFloorDoor()
+            doorControlUseCase.closeTwoFloorDoor()
+        }
         val message = JSONObject().apply {
             put("event", "route_analyze")
-            put("data", JSONArray().put(destination))
+            put("data", JSONArray(destinations))
         }.toString()
+
+        Log.e("ElevatorViewModel", "Sending route_analyze message: $message")
 
         elevatorRepository.sendMessage(message)
     }
+
 
     fun disconnectWebSocket() {
         elevatorRepository.disconnect()
     }
 
+    private var nextReplaceIndex = 0
     fun selectPoint(pointName: String, pointId: Int) {
-        _selectedPoint.value = pointName
-        selectedPointId = pointId
-        Log.d("Elevator", "Selected point: $pointName")
+
+        val newPoints = _selectedPoints.value.toMutableList()
+
+        if (newPoints.size < 2) {
+            newPoints.add(pointName to pointId)
+        } else {
+            newPoints[nextReplaceIndex] = pointName to pointId
+            nextReplaceIndex = (nextReplaceIndex + 1) % 2
+        }
+
+        _selectedPoints.value = newPoints
+        Log.d("Elevator", "Selected points: ${_selectedPoints.value}")
     }
+
 
     fun getSelectedPointId(): Int? {
         return selectedPointId
     }
 
     fun selectDoor(door1: Boolean, door2: Boolean) {
-        _selectedDoors.value = Pair(door1, door2)
+        _selectedDoors.value = listOf(door1, door2)
+        Log.d("ElevatorViewModel", "selectDoor: $_selectedDoors")
+
+        viewModelScope.launch {
+            if (door1) {
+                Log.d("ElevatorViewModel", "Mở cửa 1")
+                doorControlUseCase.openOneFloorDoor()
+            } else {
+                Log.d("ElevatorViewModel", "Đóng cửa 1")
+                doorControlUseCase.closeOneFloorDoor()
+            }
+
+            if (door2) {
+                Log.d("ElevatorViewModel", "Mở cửa 2")
+                doorControlUseCase.openTwoFloorDoor()
+            } else {
+                Log.d("ElevatorViewModel", "Đóng cửa 2")
+                doorControlUseCase.closeTwoFloorDoor()
+            }
+        }
     }
 
     fun openSelectedDoors() {
         val (door1, door2) = _selectedDoors.value
+        Log.d("ElevatorViewModel", "openSelectedDoors: $_selectedDoors")
 
         viewModelScope.launch {
-            if (door1) doorControlUseCase.openOneFloorDoor()
-            if (door2) doorControlUseCase.openTwoFloorDoor()
+            if (door1) {
+                Log.d("ElevatorViewModel", "Gọi mở cửa 1")
+                doorControlUseCase.openOneFloorDoor()
+            }
+            if (door2) {
+                Log.d("ElevatorViewModel", "Gọi mở cửa 2")
+                doorControlUseCase.openTwoFloorDoor()
+            }
         }
     }
+
 
     fun closeDoorsAndMoveUp() {
         if (currentStepIndex >= navigationSteps.size) return
@@ -316,5 +417,61 @@ class ElevatorGoHomeViewModel @Inject constructor(
 
             sendTaskStepConfirmed(confirmationCode)
         }
+    }
+    fun confirmDelivery() {
+        _isDeliveryConfirmed.value = true
+        openSelectedDoors()
+    }
+
+    fun goHome(){
+        viewModelScope.launch {
+            moveDirection.goHome()
+        }
+    }
+
+    private fun startBatteryListener() {
+        // Sử dụng API của CsjRobot để lấy trạng thái pin
+        CsjRobot.getInstance().getState().getBattery(object : OnRobotStateListener {
+            override fun getBattery(battery: Int) {
+                Log.d("ElevatorViewModel", "Battery level: $battery%")
+                _batteryLevel.value = battery
+            }
+            override fun getCharge(charge: Int) {
+                Log.d("ElevatorViewModel", "Charge state: $charge")
+            }
+        })
+    }
+
+    // Gửi thông tin sức khỏe (health_monitor) mỗi 10 giây
+    private fun startHealthMonitor() {
+        viewModelScope.launch {
+            while (true) {
+                val battery = _batteryLevel.value
+                val message = JSONObject().apply {
+                    put("event", "health_monitor")
+                    put("data", JSONObject().apply {
+                        put("battery", battery)
+                    })
+                }.toString()
+                elevatorRepository.sendMessage(message)
+                Log.d("ElevatorViewModel", "Sent health_monitor: battery=$battery")
+                delay(10000) // Mỗi 10 giây gửi một lần
+            }
+        }
+    }
+
+    // Phát nhạc khi chạy
+    private fun startMusic() {
+        mediaPlayer?.release()
+        mediaPlayer = MediaPlayer.create(application, R.raw.music)
+        mediaPlayer?.isLooping = true // Lặp lại nhạc
+        mediaPlayer?.start()
+    }
+
+    // Dừng nhạc
+    private fun stopMusic() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }
