@@ -185,10 +185,11 @@ fun RobotElevatorScreen(
                         } else {
                             Button(
                                 onClick = {
-                                    val destinationIds = selectedPoint.map { it.second }
-                                    if (destinationIds.isNotEmpty()) {
-                                        robotElevatorViewModel.requestRoute(destinationIds)
-                                    }
+//                                    val destinationIds = selectedPoint.map { it.second }
+//                                    if (destinationIds.isNotEmpty()) {
+//                                        robotElevatorViewModel.requestRoute(destinationIds)
+//                                    }
+                                    appNavController.navigate(Screen.RobotRoutePage.route)
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                             ) {

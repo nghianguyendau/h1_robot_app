@@ -1,11 +1,11 @@
 package com.phenikaa.h1_robot_app.data.repository
 
-import com.phenikaa.h1_robot_app.data.datasource.preference.Toan
+import com.phenikaa.h1_robot_app.data.datasource.preference.AppPreferences
 import com.phenikaa.h1_robot_app.domain.repository.AppRepository
 import com.phenikaa.h1_robot_app.shared.constants.AppConstants
 
 class AppRepositoryImpl (
-    private val appPreference: Toan
+    private val appPreference: AppPreferences
 ) : AppRepository {
 
 

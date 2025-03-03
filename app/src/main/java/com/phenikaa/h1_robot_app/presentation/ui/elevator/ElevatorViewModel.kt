@@ -97,7 +97,7 @@ class ElevatorViewModel @Inject constructor(
         listenToWebSocket()
 
         // Bắt đầu lắng nghe trạng thái pin và gửi health monitor
-        startBatteryListener()
+//        startBatteryListener()
         startHealthMonitor()
     }
 

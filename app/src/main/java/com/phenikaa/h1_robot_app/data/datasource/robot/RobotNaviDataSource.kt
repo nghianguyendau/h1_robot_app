@@ -10,7 +10,9 @@ import com.csjbot.coshandler.listener.OnNaviListener
 import com.csjbot.coshandler.listener.OnPositionListener
 import com.csjbot.coshandler.listener.OnSpeedGetListener
 import com.google.gson.Gson
+import com.phenikaa.h1_robot_app.data.model.RobotRoutePoseData
 import com.phenikaa.h1_robot_app.data.model.RosPosition
+import com.phenikaa.h1_robot_app.domain.entity.RobotRoutePose
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -472,6 +474,24 @@ class RobotNaviDataSource @Inject constructor(
         })
     }
 
+    fun robotRouteNaviPos(robotRoutePoseData: RobotRoutePoseData) {
+        val gson = Gson()
+        val jsonRobotRoutePoseData = gson.toJson(robotRoutePoseData)
+        robotAction.navi(jsonRobotRoutePoseData, object : OnNaviListener {
+            override fun moveResult(result: String) {
+                Log.d("RobotRouteNavi", "moveResult: $result")
+            }
 
+            override fun messageSendResult(result: String) {
+                Log.d("RobotRouteNavi", "messageSendResult: $result")
+            }
+
+            override fun cancelResult(result: String) {
+            }
+
+            override fun goHome() {
+            }
+        })
+    }
 
 }

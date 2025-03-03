@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.phenikaa.h1_robot_app.shared.constants.AppConstants
 import com.phenikaa.h1_robot_app.shared.constants.AppPreferencesConstants
 
-class Toan (context: Context) {
+class AppPreferences (context: Context) {
     private var appSettings: SharedPreferences = context.getSharedPreferences(
         AppPreferencesConstants.APP_SETTING, Context.MODE_PRIVATE)
 

@@ -17,6 +17,7 @@ import com.phenikaa.h1_robot_app.presentation.ui.saveposition.SavePositionScreen
 import com.phenikaa.h1_robot_app.presentation.ui.websocket.WebSocketScreen
 import com.phenikaa.h1_robot_app.presentation.common_view.CustomTopAppBar
 import com.phenikaa.h1_robot_app.presentation.ui.password.PassWordPage
+import com.phenikaa.h1_robot_app.presentation.ui.robot_route.RobotRoutePage
 
 
 @Composable
@@ -69,6 +70,9 @@ fun AppNavHost(
             }
             composable(Screen.PassWordPage.route) {
                 PassWordPage(navController)
+            }
+            composable(Screen.RobotRoutePage.route) {
+                RobotRoutePage(navController)
             }
         }
     }
