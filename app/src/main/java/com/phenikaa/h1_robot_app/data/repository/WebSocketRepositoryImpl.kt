@@ -56,7 +56,7 @@ class WebSocketRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendMessageRobotRoute(event: String, pointId: List<Int>) {
-        appWebSocketService.sendMessageRobotRoute(event,pointId)
+        appWebSocketService.sendMessageRobotRoute(event, pointId)
     }
 
     override suspend fun receiveMessagesRobotRoute(): RobotRoute {

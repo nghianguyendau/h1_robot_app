@@ -22,8 +22,7 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 class RobotNaviDataSource @Inject constructor(
-    private val robot: CsjRobot,
-    private val gson: Gson
+    private val robot: CsjRobot, private val gson: Gson
 ) {
     private val robotAction = robot.getAction()
 
@@ -64,12 +63,13 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     // Điều hướng đến một vị trí
-    suspend fun navigateToPosition(position: RosPosition): Boolean = suspendCoroutine { continuation ->
-        // Biến cờ để kiểm soát việc gọi resume
-        var isResumed = false
-        Log.e("000000", "1111111")
-        try {
-            val jsonObject = JSONObject()
+    suspend fun navigateToPosition(position: RosPosition): Boolean =
+        suspendCoroutine { continuation ->
+            // Biến cờ để kiểm soát việc gọi resume
+            var isResumed = false
+            Log.e("000000", "1111111")
+            try {
+                val jsonObject = JSONObject()
 //            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
 //            jsonObject.put("x", 16.090723)
 //            jsonObject.put("y", -7.5906825)
@@ -82,58 +82,58 @@ class RobotNaviDataSource @Inject constructor(
 //            jsonObject.put("rotation", -0.2657993)
 //            Log.e("111111", "22222222")
 
-            jsonObject.put("x", position.pos.x)
-            jsonObject.put("y", position.pos.y)
-            jsonObject.put("z", position.pos.z)
-            jsonObject.put("rotation", position.pos.rotation)
+                jsonObject.put("x", position.pos.x)
+                jsonObject.put("y", position.pos.y)
+                jsonObject.put("z", position.pos.z)
+                jsonObject.put("rotation", position.pos.rotation)
 
-            val json = jsonObject.toString()
+                val json = jsonObject.toString()
 
-            Log.e("22222", "333333")
+                Log.e("22222", "333333")
 
-            Log.d("Json", json);
-            json::class.simpleName?.let { Log.d("Type", it) }
+                Log.d("Json", json);
+                json::class.simpleName?.let { Log.d("Type", it) }
 
-            robotAction.navi(json, object : OnNaviListener {
-                override fun moveResult(result: String) {
-                    // Đảm bảo chỉ gọi resume một lần
-                    if (!isResumed) {
-                        isResumed = true
-                        if (result.contains("\"error_code\":0")) {
-                            continuation.resume(true) // Thành công
-                            Log.d("dsdsdsdsds", "Thanh cong")
-                        } else {
-                            continuation.resume(false) // Thất bại
-                            Log.d("dsdsdsdsds", "that baiiiiiii")
+                robotAction.navi(json, object : OnNaviListener {
+                    override fun moveResult(result: String) {
+                        // Đảm bảo chỉ gọi resume một lần
+                        if (!isResumed) {
+                            isResumed = true
+                            if (result.contains("\"error_code\":0")) {
+                                continuation.resume(true) // Thành công
+                                Log.d("dsdsdsdsds", "Thanh cong")
+                            } else {
+                                continuation.resume(false) // Thất bại
+                                Log.d("dsdsdsdsds", "that baiiiiiii")
+                            }
                         }
                     }
-                }
 
-                override fun messageSendResult(result: String) {
-                    Log.d("RobotNaviDataSource", "Message sent result: $result")
-                }
-
-                override fun cancelResult(result: String) {
-                    // Đảm bảo chỉ gọi resume một lần
-                    if (!isResumed) {
-                        isResumed = true
-                        continuation.resume(false) // Điều hướng bị hủy
+                    override fun messageSendResult(result: String) {
+                        Log.d("RobotNaviDataSource", "Message sent result: $result")
                     }
-                }
 
-                override fun goHome() {
-                    // Không cần xử lý trong trường hợp này
+                    override fun cancelResult(result: String) {
+                        // Đảm bảo chỉ gọi resume một lần
+                        if (!isResumed) {
+                            isResumed = true
+                            continuation.resume(false) // Điều hướng bị hủy
+                        }
+                    }
+
+                    override fun goHome() {
+                        // Không cần xử lý trong trường hợp này
+                    }
+                })
+            } catch (e: Exception) {
+                // Đảm bảo chỉ gọi resumeWithException một lần
+                Log.e("********", "======")
+                if (!isResumed) {
+                    isResumed = true
+                    continuation.resumeWithException(e)
                 }
-            })
-        } catch (e: Exception) {
-            // Đảm bảo chỉ gọi resumeWithException một lần
-            Log.e("********", "======")
-            if (!isResumed) {
-                isResumed = true
-                continuation.resumeWithException(e)
             }
         }
-    }
 
     suspend fun navigateToPosition2(position: String): Boolean = suspendCoroutine { continuation ->
         // Biến cờ để kiểm soát việc gọi resume
@@ -162,7 +162,7 @@ class RobotNaviDataSource @Inject constructor(
 
             jsonObject.put("x", -0.21469636)
             jsonObject.put("y", 0.006519)
-            jsonObject.put("z",0.0)
+            jsonObject.put("z", 0.0)
             jsonObject.put("rotation", -0.19207564)
 
             Log.e("111111", "22222222")
@@ -215,12 +215,13 @@ class RobotNaviDataSource @Inject constructor(
         }
     }
 
-    suspend fun navigateToDestination(position: String): Boolean = suspendCoroutine { continuation ->
-        // Biến cờ để kiểm soát việc gọi resume
-        var isResumed = false
-        Log.e("000000", "1111111")
-        try {
-            val jsonObject = JSONObject()
+    suspend fun navigateToDestination(position: String): Boolean =
+        suspendCoroutine { continuation ->
+            // Biến cờ để kiểm soát việc gọi resume
+            var isResumed = false
+            Log.e("000000", "1111111")
+            try {
+                val jsonObject = JSONObject()
 ////            jsonObject.put("msg_id", "NAVI_ROBOT_MOVE_TO_REQ")
 ////            // Điểm ngoài thang máy tầng 1
 ////            jsonObject.put("x", -13.873219)
@@ -234,7 +235,7 @@ class RobotNaviDataSource @Inject constructor(
 ////            jsonObject.put("y", 0.9554419)
 ////            jsonObject.put("z",0.0)
 ////            jsonObject.put("rotation", 36.04042)
-            // Điểm fake tầng 12A-2
+                // Điểm fake tầng 12A-2
 //            jsonObject.put("x", -6.4490547)
 //            jsonObject.put("y", -14.451439)
 //            jsonObject.put("z",0.0)
@@ -245,59 +246,60 @@ class RobotNaviDataSource @Inject constructor(
 //            jsonObject.put("z",0.0)
 //            jsonObject.put("rotation", -0.2657993)
 
-            Log.e("111111", "22222222")
+                Log.e("111111", "22222222")
 
-            val json = jsonObject.toString()
+                val json = jsonObject.toString()
 
-            Log.e("22222", "333333")
+                Log.e("22222", "333333")
 
-            Log.d("Json", json);
-            json::class.simpleName?.let { Log.d("Type", it) }
+                Log.d("Json", json);
+                json::class.simpleName?.let { Log.d("Type", it) }
 
-            robotAction.navi(position, object : OnNaviListener {
-                override fun moveResult(result: String) {
-                    // Đảm bảo chỉ gọi resume một lần
-                    if (!isResumed) {
-                        isResumed = true
-                        if (result.contains("\"error_code\":0")) {
-                            continuation.resume(true) // Thành công
-                            Log.d("dsdsdsdsds", "Thanh cong")
-                        } else {
-                            continuation.resume(false) // Thất bại
-                            Log.d("dsdsdsdsds", "that baiiiiiii")
+                robotAction.navi(position, object : OnNaviListener {
+                    override fun moveResult(result: String) {
+                        // Đảm bảo chỉ gọi resume một lần
+                        if (!isResumed) {
+                            isResumed = true
+                            if (result.contains("\"error_code\":0")) {
+                                continuation.resume(true) // Thành công
+                                Log.d("dsdsdsdsds", "Thanh cong")
+                            } else {
+                                continuation.resume(false) // Thất bại
+                                Log.d("dsdsdsdsds", "that baiiiiiii")
+                            }
                         }
                     }
-                }
 
-                override fun messageSendResult(result: String) {
-                    Log.d("RobotNaviDataSource", "Message sent result: $result")
-                }
-
-                override fun cancelResult(result: String) {
-                    // Đảm bảo chỉ gọi resume một lần
-                    if (!isResumed) {
-                        isResumed = true
-                        continuation.resume(false) // Điều hướng bị hủy
+                    override fun messageSendResult(result: String) {
+                        Log.d("RobotNaviDataSource", "Message sent result: $result")
                     }
-                }
 
-                override fun goHome() {
-                    // Không cần xử lý trong trường hợp này
+                    override fun cancelResult(result: String) {
+                        // Đảm bảo chỉ gọi resume một lần
+                        if (!isResumed) {
+                            isResumed = true
+                            continuation.resume(false) // Điều hướng bị hủy
+                        }
+                    }
+
+                    override fun goHome() {
+                        // Không cần xử lý trong trường hợp này
+                    }
+                })
+            } catch (e: Exception) {
+                // Đảm bảo chỉ gọi resumeWithException một lần
+                Log.e("********", "======")
+                if (!isResumed) {
+                    isResumed = true
+                    continuation.resumeWithException(e)
                 }
-            })
-        } catch (e: Exception) {
-            // Đảm bảo chỉ gọi resumeWithException một lần
-            Log.e("********", "======")
-            if (!isResumed) {
-                isResumed = true
-                continuation.resumeWithException(e)
             }
         }
-    }
 
-    suspend fun goAngle(angle: Int){
+    suspend fun goAngle(angle: Int) {
         robotAction.goAngle(angle)
     }
+
     suspend fun moveAngle(angle: Int): Boolean = suspendCoroutine { continuation ->
         robotAction.moveAngle(angle, object : OnGoRotationListener {
             override fun response(responseAngle: Int) {
@@ -325,15 +327,15 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     suspend fun getSpeed(): Float = suspendCoroutine { continuation ->
-       robotAction.getSpeed(object : OnSpeedGetListener {
-           override fun getNaviSpeed(p0: Double) {
-               try {
-                     continuation.resume(p0.toFloat())
+        robotAction.getSpeed(object : OnSpeedGetListener {
+            override fun getNaviSpeed(p0: Double) {
+                try {
+                    continuation.resume(p0.toFloat())
                 } catch (e: Exception) {
-                     continuation.resumeWithException(e)
-               }
-           }
-       })
+                    continuation.resumeWithException(e)
+                }
+            }
+        })
     }
 
 //    suspend fun navigateToPosition(position: RosPosition): Boolean = suspendCoroutine { continuation ->
@@ -366,9 +368,6 @@ class RobotNaviDataSource @Inject constructor(
 //    }
 
 
-
-
-
     suspend fun goHome(): Boolean = suspendCoroutine { continuation ->
         robotAction.goHome(object : OnNaviListener {
             override fun moveResult(result: String) {
@@ -393,7 +392,7 @@ class RobotNaviDataSource @Inject constructor(
         robotAction.move(direction)
     }
 
-    fun moveBySerial(direction: Int){
+    fun moveBySerial(direction: Int) {
         robotAction.moveBySerial(direction)
     }
 
@@ -440,10 +439,10 @@ class RobotNaviDataSource @Inject constructor(
     fun loadMap(name: String, x: Float, y: Float, rotation: Float) {
         robotAction.loadMap(name, x, y, rotation)
     }
+
     fun loadMap(name: String, x: Float, y: Float, rotation: Float, listener: OnMapListener) {
         robotAction.loadMap(name, x, y, rotation, listener)
     }
-
 
 
     // Lấy danh sách bản đồ từ SDK
@@ -475,22 +474,21 @@ class RobotNaviDataSource @Inject constructor(
     }
 
     fun robotRouteNaviPos(robotRoutePoseData: RobotRoutePoseData) {
-        val gson = Gson()
-        val jsonRobotRoutePoseData = gson.toJson(robotRoutePoseData)
-        robotAction.navi(jsonRobotRoutePoseData, object : OnNaviListener {
-            override fun moveResult(result: String) {
-                Log.d("RobotRouteNavi", "moveResult: $result")
-            }
+        val data = mapOf(
+            "x" to robotRoutePoseData.x,
+            "y" to robotRoutePoseData.y,
+            "z" to robotRoutePoseData.z,
+            "rotation" to robotRoutePoseData.rotation
+        )
+        val jsonData = Gson().toJson(data)
+        robotAction.navi(jsonData.toString(), object : OnNaviListener {
+            override fun moveResult(result: String) {}
 
-            override fun messageSendResult(result: String) {
-                Log.d("RobotRouteNavi", "messageSendResult: $result")
-            }
+            override fun messageSendResult(result: String) {}
 
-            override fun cancelResult(result: String) {
-            }
+            override fun cancelResult(result: String) {}
 
-            override fun goHome() {
-            }
+            override fun goHome() {}
         })
     }
 

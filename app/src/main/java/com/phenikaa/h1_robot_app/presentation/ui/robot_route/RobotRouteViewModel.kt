@@ -3,6 +3,7 @@ package com.phenikaa.h1_robot_app.presentation.ui.robot_route
 import android.util.Log
 import com.phenikaa.h1_robot_app.data.model.RobotRouteData
 import com.phenikaa.h1_robot_app.domain.entity.RobotRoute
+import com.phenikaa.h1_robot_app.domain.entity.RobotRoutePose
 import com.phenikaa.h1_robot_app.domain.usecase.GetPassWordUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.InitPassWordAppUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteConnectUseCase
@@ -35,23 +36,22 @@ class RobotRouteViewModel @Inject constructor(
     val navigationState = _navigationState.asSharedFlow()
 
 
-    fun onInitRobotRoute(lPointId: List<Int> ) = launch {
+    fun onInitRobotRoute(lPointId: List<Int>) = launch {
         robotRouteConnectUseCase.invoke()
-        robotRouteSendMessengerUseCase.invoke("route_analyze",lPointId)
+        robotRouteSendMessengerUseCase.invoke("route_analyze", lPointId)
         onGetRobotRoute()
-        onRobotRouteNaviPos()
     }
 
-    suspend fun onGetRobotRoute() {
+    private suspend fun onGetRobotRoute() {
         val robotRoute = robotRouteReceiveMessagesUseCase.invoke()
         _uiState.update {
-                it.copy(robotRoute = robotRoute)
-            }
-        Log.d("RobotRouteNavi", "onGetRobotRoute")
+            it.copy(robotRoute = robotRoute)
+        }
+        onRobotRouteNaviPos(robotRoute.robotRouteTask.data.first().navigationSteps.first().robotRoutePose)
     }
 
-    suspend fun onRobotRouteNaviPos() {
-        robotRouteNaviPosUseCase.invoke(_uiState.value.robotRoute.robotRouteTask.data.first().navigationSteps.first().robotRoutePose)
+    private suspend fun onRobotRouteNaviPos(robotRoutePose: RobotRoutePose) {
+        robotRouteNaviPosUseCase.invoke(robotRoutePose)
     }
 
 

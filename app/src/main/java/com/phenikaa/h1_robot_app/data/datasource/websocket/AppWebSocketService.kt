@@ -29,7 +29,6 @@ class AppWebSocketService(
         )
         val jsonData = Gson().toJson(data)
         webSocketClient.sendMessage(jsonData)
-        Log.d("WebSocketRepositoryImpl", "Sent message: $jsonData")
     }
 
     fun receiveMessagesRobotRoute(): Flow<RobotRouteData> {

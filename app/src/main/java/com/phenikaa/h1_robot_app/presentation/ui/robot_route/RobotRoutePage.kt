@@ -14,7 +14,7 @@ import com.phenikaa.h1_robot_app.presentation.theme.AppColor
 import com.phenikaa.h1_robot_app.presentation.ui.password.PassWordState
 
 @Composable
-fun RobotRoutePage (
+fun RobotRoutePage(
     navController: NavHostController,
     lPointId: List<Int> = listOf(114),
     viewModel: RobotRouteViewModel = hiltViewModel()
@@ -25,20 +25,23 @@ fun RobotRoutePage (
     }
 
     val state by viewModel.state.collectAsState()
-    RobotRouteScreen(state,navController)
+    RobotRouteScreen(state, navController)
 }
 
 @Composable
-fun RobotRouteScreen (
+fun RobotRouteScreen(
     state: RobotRouteState,
     appNavController: NavHostController,
 ) {
-   CommonScaffold(
-       content = { paddingValues ->
-           Column {
-                Text(text = state.robotRoute.status,
-                    color = AppColor.red400)
-           }
+    CommonScaffold(
+        content = { paddingValues ->
+            Column {
+                Text(
+                    text = state.robotRoute.status,
+                    color = AppColor.red400
+                )
+            }
 
-   }, navController = appNavController)
+        }, navController = appNavController
+    )
 }

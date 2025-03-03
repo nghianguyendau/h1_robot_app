@@ -68,7 +68,6 @@ class WebSocketClient {
     }
 
     fun sendMessage(message: String) {
-        Log.e("WebSocketRoute", "WebSocket sendMessage: ${message}")
         webSocket?.send(message)
     }
 
