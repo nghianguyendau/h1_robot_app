@@ -28,7 +28,7 @@ import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltViewModel
-class ElevatorViewModel @Inject constructor(
+class DeliveryViewModel @Inject constructor(
     private val application: Application,
     private val navigateToDestinationUseCase: NavigateToDestinationUseCase,
     private val elevatorRepository: ElevatorRepository,
@@ -319,6 +319,10 @@ class ElevatorViewModel @Inject constructor(
     }
 
     fun requestRoute(destinations: List<Int>) {
+        viewModelScope.launch {
+            doorControlUseCase.closeOneFloorDoor()
+            doorControlUseCase.closeTwoFloorDoor()
+        }
         val message = JSONObject().apply {
             put("event", "route_analyze")
             put("data", JSONArray(destinations))
@@ -357,16 +361,43 @@ class ElevatorViewModel @Inject constructor(
 
     fun selectDoor(door1: Boolean, door2: Boolean) {
         _selectedDoors.value = listOf(door1, door2)
+        Log.d("ElevatorViewModel", "selectDoor: $_selectedDoors")
+
+        viewModelScope.launch {
+            if (door1) {
+                Log.d("ElevatorViewModel", "Mở cửa 1")
+                doorControlUseCase.openOneFloorDoor()
+            } else {
+                Log.d("ElevatorViewModel", "Đóng cửa 1")
+                doorControlUseCase.closeOneFloorDoor()
+            }
+
+            if (door2) {
+                Log.d("ElevatorViewModel", "Mở cửa 2")
+                doorControlUseCase.openTwoFloorDoor()
+            } else {
+                Log.d("ElevatorViewModel", "Đóng cửa 2")
+                doorControlUseCase.closeTwoFloorDoor()
+            }
+        }
     }
 
     fun openSelectedDoors() {
         val (door1, door2) = _selectedDoors.value
+        Log.d("ElevatorViewModel", "openSelectedDoors: $_selectedDoors")
 
         viewModelScope.launch {
-            if (door1) doorControlUseCase.openOneFloorDoor()
-            if (door2) doorControlUseCase.openTwoFloorDoor()
+            if (door1) {
+                Log.d("ElevatorViewModel", "Gọi mở cửa 1")
+                doorControlUseCase.openOneFloorDoor()
+            }
+            if (door2) {
+                Log.d("ElevatorViewModel", "Gọi mở cửa 2")
+                doorControlUseCase.openTwoFloorDoor()
+            }
         }
     }
+
 
     fun closeDoorsAndMoveUp() {
         if (currentStepIndex >= navigationSteps.size) return

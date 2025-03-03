@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.phenikaa.h1_robot_app.presentation.ui.cruising.CruisingScreen
-import com.phenikaa.h1_robot_app.presentation.ui.elevator.RobotElevatorScreen
 import com.phenikaa.h1_robot_app.presentation.ui.home.HomeScreen
 import com.phenikaa.h1_robot_app.presentation.ui.navigation.NavigationScreen
 import com.phenikaa.h1_robot_app.presentation.ui.phonecall.PhoneCallScreen
@@ -16,6 +15,7 @@ import com.phenikaa.h1_robot_app.presentation.ui.robotdoor.RobotDoorScreen
 import com.phenikaa.h1_robot_app.presentation.ui.saveposition.SavePositionScreen
 import com.phenikaa.h1_robot_app.presentation.ui.websocket.WebSocketScreen
 import com.phenikaa.h1_robot_app.presentation.common_view.CustomTopAppBar
+import com.phenikaa.h1_robot_app.presentation.ui.elevator.DeliveryScreen
 import com.phenikaa.h1_robot_app.presentation.ui.password.PassWordPage
 import com.phenikaa.h1_robot_app.presentation.ui.robot_route.RobotRoutePage
 
@@ -60,7 +60,7 @@ fun AppNavHost(
                 RobotDoorScreen(navController)
             }
             composable(Screen.ElevatorScreen.route) {
-                RobotElevatorScreen(navController)
+                DeliveryScreen(navController)
             }
             composable(Screen.SavePositionScreen.route) {
                 SavePositionScreen(navController)
