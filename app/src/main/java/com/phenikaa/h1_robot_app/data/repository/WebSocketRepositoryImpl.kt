@@ -1,19 +1,15 @@
 package com.phenikaa.h1_robot_app.data.repository
 
 import android.util.Log
-import com.google.gson.Gson
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.AppWebSocketService
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
-import com.phenikaa.h1_robot_app.data.datasource.websocket.base.WebSocketClient
+import com.phenikaa.h1_robot_app.data.source.robot.RobotNaviDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.AppWebSocketService
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.data.mapper.RobotRouteMapper
 import com.phenikaa.h1_robot_app.data.mapper.RobotRoutePoseMapper
-import com.phenikaa.h1_robot_app.data.model.RobotRouteData
 import com.phenikaa.h1_robot_app.domain.entity.RobotRoute
 import com.phenikaa.h1_robot_app.domain.entity.RobotRoutePose
 import com.phenikaa.h1_robot_app.domain.repository.WebSocketRepository
-import com.phenikaa.h1_robot_app.shared.constants.EnvConstants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -55,8 +51,8 @@ class WebSocketRepositoryImpl @Inject constructor(
         appWebSocketService.disconnectRobotRoute()
     }
 
-    override suspend fun sendMessageRobotRoute(event: String, pointId: List<Int>) {
-        appWebSocketService.sendMessageRobotRoute(event, pointId)
+    override suspend fun sendMessageRobotRouteAnalyze(event: String, pointId: List<Int>) {
+        appWebSocketService.sendMessageRobotRouteAnalyze(event, pointId)
     }
 
     override suspend fun receiveMessagesRobotRoute(): RobotRoute {
@@ -67,5 +63,21 @@ class WebSocketRepositoryImpl @Inject constructor(
 
     override suspend fun robotRouteNaviPos(robotRoutePose: RobotRoutePose) {
         return robotNaviDataSource.robotRouteNaviPos(robotRoutePoseMapper.mapToData(robotRoutePose))
+    }
+
+    override suspend fun sendMessageRobotRouteCancelTask(event: String) {
+        appWebSocketService.sendMessageRobotRouteCancelTask(event)
+    }
+
+    override suspend fun sendMessageRobotRouteTaskStepConfirm(event: String, data: String) {
+        appWebSocketService.sendMessageRobotRouteTaskStepConfirm(event, data)
+    }
+
+    override suspend fun sendMessageRobotRouteTaskStageFinish(
+        event: String,
+        stageId: Int,
+        status: Int
+    ) {
+        appWebSocketService.sendMessageRobotRouteTaskStageFinish(event, stageId, status)
     }
 }

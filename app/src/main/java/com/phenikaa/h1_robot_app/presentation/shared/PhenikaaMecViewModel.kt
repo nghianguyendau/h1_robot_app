@@ -5,12 +5,11 @@ import android.app.Application
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.csjbot.coshandler.core.CsjRobot
 import com.csjbot.coshandler.listener.OnRobotStateListener
 import com.phenikaa.h1_robot_app.R
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.data.model.DataFloors
 import com.phenikaa.h1_robot_app.data.model.NewPoint
 import com.phenikaa.h1_robot_app.data.model.Point
@@ -21,7 +20,6 @@ import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUse
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ConnectPhoneCallWebSocketUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.DisconnectPhoneCallWebSocketUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObserveConnectionStateUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ObservePhoneCallMessagesUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.SendLoraMessageUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.DeletePointUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.GetPointsByFloorIdUseCase
@@ -29,7 +27,6 @@ import com.phenikaa.h1_robot_app.domain.usecase.point.GetPointsUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.SavePointUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.point.UpdatePointUseCase
 import com.phenikaa.h1_robot_app.utils.NavigationUtils.toNavigationStrings
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

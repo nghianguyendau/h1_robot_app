@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.di
 
 import com.google.gson.Gson
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
 import com.phenikaa.h1_robot_app.data.repository.ElevatorRepository
 import com.phenikaa.h1_robot_app.domain.usecase.elevator.*
 import dagger.Module

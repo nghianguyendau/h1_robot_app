@@ -1,6 +1,6 @@
 package com.phenikaa.h1_robot_app.data.repository
 
-import com.phenikaa.h1_robot_app.data.datasource.preference.AppPreferences
+import com.phenikaa.h1_robot_app.data.source.preference.AppPreferences
 import com.phenikaa.h1_robot_app.domain.repository.AppRepository
 import com.phenikaa.h1_robot_app.shared.constants.AppConstants
 

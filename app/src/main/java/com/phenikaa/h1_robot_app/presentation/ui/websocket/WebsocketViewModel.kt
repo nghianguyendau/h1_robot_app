@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.phenikaa.h1_robot_app.domain.repository.WebSocketRepository
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.domain.entity.PhoneCallMessage
 import com.phenikaa.h1_robot_app.domain.usecase.websocket.ReceiveMessagesUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.websocket.SendMessageUseCase

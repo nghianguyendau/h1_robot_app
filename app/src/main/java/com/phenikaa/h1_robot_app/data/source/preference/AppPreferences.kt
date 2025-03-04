@@ -1,4 +1,4 @@
-package com.phenikaa.h1_robot_app.data.datasource.preference
+package com.phenikaa.h1_robot_app.data.source.preference
 
 import android.content.Context
 import android.content.SharedPreferences

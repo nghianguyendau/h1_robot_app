@@ -1,10 +1,10 @@
 package com.phenikaa.h1_robot_app.di
 
 import com.google.gson.Gson
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.AppWebSocketService
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.base.WebSocketClient
+import com.phenikaa.h1_robot_app.data.source.robot.RobotNaviDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.AppWebSocketService
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.base.WebSocketClient
 import com.phenikaa.h1_robot_app.data.mapper.RobotRouteMapper
 import com.phenikaa.h1_robot_app.data.mapper.RobotRoutePoseMapper
 import com.phenikaa.h1_robot_app.data.mapper.RobotRouteStepMapper
@@ -12,12 +12,10 @@ import com.phenikaa.h1_robot_app.data.mapper.RobotRouteTaskDetailMapper
 import com.phenikaa.h1_robot_app.data.mapper.RobotRouteTaskMapper
 import com.phenikaa.h1_robot_app.data.repository.WebSocketRepositoryImpl
 import com.phenikaa.h1_robot_app.domain.repository.WebSocketRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module

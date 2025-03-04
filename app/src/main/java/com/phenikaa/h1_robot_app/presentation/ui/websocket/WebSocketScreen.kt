@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.presentation.common_view.CommonScaffold
 
 @Composable

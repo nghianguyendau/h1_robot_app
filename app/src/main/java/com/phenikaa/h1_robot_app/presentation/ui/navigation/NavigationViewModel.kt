@@ -1,18 +1,15 @@
 package com.phenikaa.h1_robot_app.presentation.ui.navigation
 
 import android.app.Application
-import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.csjbot.coshandler.core.CsjRobot
-import com.csjbot.coshandler.listener.OnMapListListener
 import com.csjbot.coshandler.listener.OnMapListener
 import com.csjbot.coshandler.listener.OnRobotStateListener
 import com.phenikaa.h1_robot_app.R
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
+import com.phenikaa.h1_robot_app.data.source.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.RosPosition
 import com.phenikaa.h1_robot_app.domain.entity.Position
 import com.phenikaa.h1_robot_app.domain.entity.NavigationState
@@ -23,7 +20,6 @@ import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToDestination
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPosition2UseCase
 import com.phenikaa.h1_robot_app.domain.usecase.navigation.NavigateToPositionUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robotdoor.RobotDoorUseCase
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,7 +28,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date

@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.presentation.di.module
 
 import android.app.Application
-import com.phenikaa.h1_robot_app.data.datasource.preference.AppPreferences
+import com.phenikaa.h1_robot_app.data.source.preference.AppPreferences
 import android.content.Context
 import com.phenikaa.h1_robot_app.data.repository.AppRepositoryImpl
 import com.phenikaa.h1_robot_app.domain.repository.AppRepository
@@ -10,7 +10,8 @@ import com.phenikaa.h1_robot_app.domain.usecase.GetPassWordUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.InitPassWordAppUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteConnectUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteReceiveMessagesUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerCancelTaskUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerRouteAnalyzeUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.robotRouteNaviPosUseCase
 import dagger.Module
 import dagger.Provides
@@ -58,13 +59,18 @@ class DataModule {
     }
 
     @Provides
-    fun provideRobotRouteSendMessengerUseCase(webSocketRepository: WebSocketRepository): RobotRouteSendMessengerUseCase {
-        return RobotRouteSendMessengerUseCase(webSocketRepository)
+    fun provideRobotRouteSendMessengerUseCase(webSocketRepository: WebSocketRepository): RobotRouteSendMessengerRouteAnalyzeUseCase {
+        return RobotRouteSendMessengerRouteAnalyzeUseCase(webSocketRepository)
     }
 
     @Provides
     fun provideRobotRouteNaviPosUseCase(webSocketRepository: WebSocketRepository): robotRouteNaviPosUseCase {
         return robotRouteNaviPosUseCase(webSocketRepository)
+    }
+
+    @Provides
+    fun provideRobotRouteSendMessengerCancelTaskUseCase(webSocketRepository: WebSocketRepository): RobotRouteSendMessengerCancelTaskUseCase {
+        return RobotRouteSendMessengerCancelTaskUseCase(webSocketRepository)
     }
 
 }

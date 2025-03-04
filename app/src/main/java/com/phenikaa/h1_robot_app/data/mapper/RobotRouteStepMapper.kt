@@ -3,6 +3,7 @@ package com.phenikaa.h1_robot_app.data.mapper
 import com.phenikaa.h1_robot_app.data.mapper.base.BaseDataMapper
 import com.phenikaa.h1_robot_app.data.model.RobotRouteStepData
 import com.phenikaa.h1_robot_app.domain.entity.RobotRouteStep
+import com.phenikaa.h1_robot_app.domain.entity.enum.RobotRouteTaskActionStatus
 
 class RobotRouteStepMapper(
     private val robotRoutePoseMapper: RobotRoutePoseMapper
@@ -10,7 +11,9 @@ class RobotRouteStepMapper(
 
     override fun mapToEntity(data: RobotRouteStepData?): RobotRouteStep {
         return RobotRouteStep(
-            action = data?.action ?: RobotRouteStep.defaultAction,
+            robotRouteTaskActionStatus = RobotRouteTaskActionStatus.fromValue(
+                data?.action ?: RobotRouteTaskActionStatus.UnKnow.value
+            ),
             robotRoutePose = robotRoutePoseMapper.mapToEntity(data?.robotRoutePose),
             pointId = data?.pointId ?: RobotRouteStep.defaultPointId,
             confirmationCode = data?.confirmationCode ?: RobotRouteStep.defaultConfirmationCode

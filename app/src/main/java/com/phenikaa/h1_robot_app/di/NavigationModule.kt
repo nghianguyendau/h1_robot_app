@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.di
 
 import com.csjbot.coshandler.core.CsjRobot
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
+import com.phenikaa.h1_robot_app.data.source.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.repository.NavigationRepositoryImpl
 import com.phenikaa.h1_robot_app.domain.repository.NavigationRepository
 import dagger.Module

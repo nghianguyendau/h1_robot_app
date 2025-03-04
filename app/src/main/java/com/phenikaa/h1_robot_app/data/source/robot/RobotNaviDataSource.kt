@@ -1,4 +1,4 @@
-package com.phenikaa.h1_robot_app.data.datasource.robot
+package com.phenikaa.h1_robot_app.data.source.robot
 
 import android.util.Log
 import com.csjbot.coshandler.core.CsjRobot
@@ -12,9 +12,6 @@ import com.csjbot.coshandler.listener.OnSpeedGetListener
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.model.RobotRoutePoseData
 import com.phenikaa.h1_robot_app.data.model.RosPosition
-import com.phenikaa.h1_robot_app.domain.entity.RobotRoutePose
-import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 import kotlin.coroutines.resume

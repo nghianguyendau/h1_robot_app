@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.phenikaa.h1_robot_app.data.api.PhenikaaMecApiClient
-import com.phenikaa.h1_robot_app.data.datasource.robot.RobotNaviDataSource
+import com.phenikaa.h1_robot_app.data.source.robot.RobotNaviDataSource
 import com.phenikaa.h1_robot_app.data.model.NewPoint
 import com.phenikaa.h1_robot_app.data.model.Point
 import com.phenikaa.h1_robot_app.data.model.RosPosition

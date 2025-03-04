@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.phenikaa.h1_robot_app.R
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.presentation.common_view.CustomSpacer
 
 @Composable

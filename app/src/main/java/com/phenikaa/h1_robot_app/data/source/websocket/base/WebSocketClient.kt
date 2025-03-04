@@ -1,15 +1,20 @@
-package com.phenikaa.h1_robot_app.data.datasource.websocket
+package com.phenikaa.h1_robot_app.data.source.websocket.base
 
 import android.util.Log
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 
-class BaseWebSocketDataSource {
+class WebSocketClient {
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
 
@@ -23,16 +28,17 @@ class BaseWebSocketDataSource {
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
             _connectionState.value = ConnectionState.CONNECTED
-            Log.d("WebSocket", "WebSocket connected ${response.request.url}")
+            Log.d("WebSocketRoute", "WebSocket connected ${response.request.url}")
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
+            Log.e("WebSocketRoute", "onMessage: $text")
             if (!messageChannel.isClosedForSend) {
                 if (!messageChannel.trySend(text).isSuccess) {
-                    Log.e("WebSocket", "Failed to send message to channel: $text")
+                    Log.e("WebSocketRoute", "Failed to send message to channel: $text")
                 }
             } else {
-                Log.e("WebSocket", "Channel is closed, cannot send message")
+                Log.e("WebSocketRoute", "Channel is closed, cannot send message")
             }
         }
 
@@ -42,12 +48,12 @@ class BaseWebSocketDataSource {
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             _connectionState.value = ConnectionState.DISCONNECTED
-            Log.d("WebSocket", "WebSocket closed: $reason")
+            Log.d("WebSocketRoute", "WebSocket closed: $reason")
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             _connectionState.value = ConnectionState.DISCONNECTED
-            Log.e("WebSocket", "WebSocket connection failed: ${t.message}")
+            Log.e("WebSocketRoute", "WebSocket connection failed: ${t.message}")
         }
     }
 
@@ -62,16 +68,10 @@ class BaseWebSocketDataSource {
     }
 
     fun sendMessage(message: String) {
-        Log.d("WebSocket", "WebSocket closed: $message")
         webSocket?.send(message)
     }
 
     fun receiveMessages(): Flow<String> {
-        Log.d("WebSocket", "WebSocket receiveMessages" )
         return messageChannel.receiveAsFlow()
     }
-}
-
-enum class ConnectionState {
-    CONNECTED, DISCONNECTED
 }

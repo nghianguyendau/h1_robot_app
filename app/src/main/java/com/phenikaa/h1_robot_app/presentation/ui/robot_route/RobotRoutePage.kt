@@ -25,13 +25,17 @@ fun RobotRoutePage(
     }
 
     val state by viewModel.state.collectAsState()
-    RobotRouteScreen(state, navController)
+    RobotRouteScreen(state, navController, onTapBack = {
+        viewModel.onRobotCancelTask()
+        navController.popBackStack()
+    })
 }
 
 @Composable
 fun RobotRouteScreen(
     state: RobotRouteState,
     appNavController: NavHostController,
+    onTapBack: () -> Unit
 ) {
     CommonScaffold(
         content = { paddingValues ->
@@ -42,6 +46,7 @@ fun RobotRouteScreen(
                 )
             }
 
-        }, navController = appNavController
+        }, navController = appNavController,
+        onTapBackButton = onTapBack
     )
 }

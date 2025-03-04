@@ -1,14 +1,10 @@
 package com.phenikaa.h1_robot_app.presentation.ui.robot_route
 
-import android.util.Log
-import com.phenikaa.h1_robot_app.data.model.RobotRouteData
-import com.phenikaa.h1_robot_app.domain.entity.RobotRoute
 import com.phenikaa.h1_robot_app.domain.entity.RobotRoutePose
-import com.phenikaa.h1_robot_app.domain.usecase.GetPassWordUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.InitPassWordAppUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteConnectUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteReceiveMessagesUseCase
-import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerCancelTaskUseCase
+import com.phenikaa.h1_robot_app.domain.usecase.robot_route.RobotRouteSendMessengerRouteAnalyzeUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.robot_route.robotRouteNaviPosUseCase
 import com.phenikaa.h1_robot_app.presentation.base.BaseViewModel
 import com.phenikaa.h1_robot_app.presentation.ui.password.PassWordNavigationState
@@ -18,16 +14,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
 class RobotRouteViewModel @Inject constructor(
     private val robotRouteConnectUseCase: RobotRouteConnectUseCase,
-    private val robotRouteSendMessengerUseCase: RobotRouteSendMessengerUseCase,
+    private val robotRouteSendMessengerRouteAnalyzeUseCase: RobotRouteSendMessengerRouteAnalyzeUseCase,
     private val robotRouteReceiveMessagesUseCase: RobotRouteReceiveMessagesUseCase,
     private val robotRouteNaviPosUseCase: robotRouteNaviPosUseCase,
+    private val robotRouteSendMessengerCancelTaskUseCase: RobotRouteSendMessengerCancelTaskUseCase,
 ) : BaseViewModel() {
     private val _uiState: MutableStateFlow<RobotRouteState> = MutableStateFlow(RobotRouteState())
     val state = _uiState.asStateFlow()
@@ -38,7 +34,7 @@ class RobotRouteViewModel @Inject constructor(
 
     fun onInitRobotRoute(lPointId: List<Int>) = launch {
         robotRouteConnectUseCase.invoke()
-        robotRouteSendMessengerUseCase.invoke("route_analyze", lPointId)
+        robotRouteSendMessengerRouteAnalyzeUseCase.invoke("route_analyze", lPointId)
         onGetRobotRoute()
     }
 
@@ -47,11 +43,15 @@ class RobotRouteViewModel @Inject constructor(
         _uiState.update {
             it.copy(robotRoute = robotRoute)
         }
-        onRobotRouteNaviPos(robotRoute.robotRouteTask.data.first().navigationSteps.first().robotRoutePose)
+//        onRobotRouteNaviPos(robotRoute.robotRouteTask.data.first().navigationSteps.first().robotRoutePose)
     }
 
     private suspend fun onRobotRouteNaviPos(robotRoutePose: RobotRoutePose) {
         robotRouteNaviPosUseCase.invoke(robotRoutePose)
+    }
+
+    fun onRobotCancelTask() = launch {
+        robotRouteSendMessengerCancelTaskUseCase.invoke()
     }
 
 
