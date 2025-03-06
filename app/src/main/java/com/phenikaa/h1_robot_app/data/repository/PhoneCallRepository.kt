@@ -1,11 +1,11 @@
 package com.phenikaa.h1_robot_app.data.repository
 
 import com.google.gson.Gson
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
-import com.phenikaa.h1_robot_app.domain.model.LoraMessage
-import com.phenikaa.h1_robot_app.domain.model.PhoneCallMessage
-import com.phenikaa.h1_robot_app.domain.model.PhoneCallResponseMessage
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
+import com.phenikaa.h1_robot_app.domain.entity.LoraMessage
+import com.phenikaa.h1_robot_app.domain.entity.PhoneCallMessage
+import com.phenikaa.h1_robot_app.domain.entity.PhoneCallResponseMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

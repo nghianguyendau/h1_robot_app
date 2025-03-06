@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.domain.usecase.phonecall
 
 import com.phenikaa.h1_robot_app.data.repository.PhoneCallRepository
-import com.phenikaa.h1_robot_app.domain.model.PhoneCallResponseMessage
+import com.phenikaa.h1_robot_app.domain.entity.PhoneCallResponseMessage
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

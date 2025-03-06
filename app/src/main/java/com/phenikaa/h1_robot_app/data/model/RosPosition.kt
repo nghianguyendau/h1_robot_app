@@ -24,7 +24,7 @@
 package com.phenikaa.h1_robot_app.data.model
 
 import com.google.gson.annotations.SerializedName
-import com.phenikaa.h1_robot_app.domain.model.Position
+import com.phenikaa.h1_robot_app.domain.entity.Position
 
 data class RosPosition(
     @SerializedName("pose_name") var poseName: String? = null, // Tên vị trí

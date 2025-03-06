@@ -9,4 +9,6 @@ sealed class Screen(val route: String) {
     object ElevatorScreen: Screen("elevator_screen")
     object SavePositionScreen: Screen("savePose_screen")
     object CruisingScreen: Screen("cruising_screen")
+    object PassWordPage: Screen("password_screen")
+    object RobotRoutePage: Screen("robot_route_page")
 }

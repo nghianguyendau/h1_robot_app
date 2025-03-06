@@ -3,17 +3,12 @@ package com.phenikaa.h1_robot_app.data.repository
 import android.util.Log
 import com.google.gson.Gson
 import com.phenikaa.h1_robot_app.data.api.ApiClient
-import com.phenikaa.h1_robot_app.data.api.ApiService
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
-import com.phenikaa.h1_robot_app.data.datasource.websocket.ConnectionState
-import com.phenikaa.h1_robot_app.data.model.ElevatorData
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.ConnectionState
 import com.phenikaa.h1_robot_app.data.model.ElevatorRequest
 import com.phenikaa.h1_robot_app.data.model.ElevatorResponse
-import com.phenikaa.h1_robot_app.domain.model.ElevatorMessage
-import com.phenikaa.h1_robot_app.domain.model.ElevatorResponseMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ElevatorRepository @Inject constructor(
@@ -32,8 +27,8 @@ class ElevatorRepository @Inject constructor(
         return ApiClient.apiService.callElevator(request, "RobotSN01")
     }
     fun connect() {
-//        baseWebSocketDataSource.connect("wss://robotic-elevator-api.phx.asia?type=ROBOT&serial_number=RobotSN01")
-        baseWebSocketDataSource.connect("ws://5963-2a09-bac1-7aa0-50-00-247-123.ngrok-free.app?type=ROBOT&serial_number=SN01")
+//        baseWebSocketDataSource.connect("wss://robotic-phenikaa-mec-server.phx.asia?type=ROBOT&serial_number=RobotSN01")
+        baseWebSocketDataSource.connect("ws://271e-118-70-209-177.ngrok-free.app?type=ROBOT&serial_number=SN01")
     }
 
     fun disconnect() {

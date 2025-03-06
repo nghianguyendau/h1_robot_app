@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.di
 
 import com.google.gson.Gson
-import com.phenikaa.h1_robot_app.data.datasource.websocket.BaseWebSocketDataSource
+import com.phenikaa.h1_robot_app.data.source.websocket.BaseWebSocketDataSource
 import com.phenikaa.h1_robot_app.data.repository.PhoneCallRepository
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.ConnectPhoneCallWebSocketUseCase
 import com.phenikaa.h1_robot_app.domain.usecase.phonecall.DisconnectPhoneCallWebSocketUseCase

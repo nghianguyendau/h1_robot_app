@@ -1,7 +1,7 @@
 package com.phenikaa.h1_robot_app.domain.usecase.phonecall
 
 import com.phenikaa.h1_robot_app.data.repository.PhoneCallRepository
-import com.phenikaa.h1_robot_app.domain.model.LoraMessage
+import com.phenikaa.h1_robot_app.domain.entity.LoraMessage
 import javax.inject.Inject
 
 class SendLoraMessageUseCase @Inject constructor(
